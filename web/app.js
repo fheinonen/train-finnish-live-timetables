@@ -107,6 +107,47 @@ function updateNextSummary(nextDeparture) {
   nextSummaryEl.classList.remove("hidden");
 }
 
+function buildStatusFromResponse(data) {
+  if (!data || !data.station) {
+    return data?.message || "No nearby train stations found.";
+  }
+
+  const visibleDepartures = getVisibleDepartures(data.station.departures);
+  const next = visibleDepartures[0];
+  if (!next) {
+    return helsinkiOnly
+      ? "No Helsinki-bound trains in upcoming departures."
+      : "No upcoming commuter trains right now.";
+  }
+
+  const destination = next.destination ? ` • ${next.destination}` : "";
+  const nextTrack = next.track ? ` • Track ${next.track}` : "";
+  return `Next ${next.line || "train"} in ${formatMinutes(next.departureIso)}${destination}${nextTrack}`;
+}
+
+function getLoadErrorStatus(error) {
+  if (!(error instanceof Error)) {
+    return "Could not refresh departures. Please try again.";
+  }
+
+  const message = (error.message || "").trim();
+  if (message === "Temporary server error. Please try again.") {
+    return message;
+  }
+  if (message === "Invalid lat/lon") {
+    return "Location coordinates were invalid. Please refresh your location.";
+  }
+
+  return "Could not refresh departures. Please try again.";
+}
+
+function getGeolocationErrorStatus(error) {
+  if (error?.code === 1) return "Location permission denied.";
+  if (error?.code === 2) return "Location unavailable. Please try again.";
+  if (error?.code === 3) return "Location request timed out. Please try again.";
+  return "Unable to get your location.";
+}
+
 function alignDepartureColumns() {
   const rows = [...document.querySelectorAll(".departure-row .train-top")];
   if (rows.length === 0) return;
@@ -284,24 +325,13 @@ async function load(lat, lon) {
     render(json);
     setPermissionRequired(false);
     setLastUpdated(new Date());
-    if (!json.station) {
-      setStatus(json.message || "No nearby train stations found.");
-    } else {
-      const visibleDepartures = getVisibleDepartures(json.station.departures);
-      const next = visibleDepartures[0];
-      if (next) {
-        const destination = next.destination ? ` • ${next.destination}` : "";
-        const nextTrack = next.track ? ` • Track ${next.track}` : "";
-        setStatus(
-          `Next ${next.line || "train"} in ${formatMinutes(next.departureIso)}${destination}${nextTrack}`
-        );
-      } else {
-        setStatus("Updated.");
-      }
-    }
+    setStatus(buildStatusFromResponse(json));
   } catch (err) {
-    setStatus(`Error: ${err.message}`);
+    latestResponse = null;
+    console.error("load departures error:", err);
+    setStatus(getLoadErrorStatus(err));
     resultEl.classList.add("hidden");
+    updateNextSummary(null);
   } finally {
     setLoading(false);
   }
@@ -333,12 +363,18 @@ function requestLocationAndLoad() {
       setLoading(false);
       if (err.code === 1) {
         setPermissionRequired(true);
-        setStatus("Location permission denied.");
+        setStatus(getGeolocationErrorStatus(err));
+        latestResponse = null;
         resultEl.classList.add("hidden");
+        updateNextSummary(null);
         return;
       }
 
-      setStatus(`Location error: ${err.message}`);
+      setPermissionRequired(false);
+      setStatus(getGeolocationErrorStatus(err));
+      latestResponse = null;
+      resultEl.classList.add("hidden");
+      updateNextSummary(null);
     },
     { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 }
   );
@@ -364,6 +400,7 @@ helsinkiOnlyBtn.addEventListener("click", () => {
   updateHelsinkiFilterButton();
   if (latestResponse) {
     render(latestResponse);
+    setStatus(buildStatusFromResponse(latestResponse));
   }
 });
 

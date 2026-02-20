@@ -32,15 +32,22 @@ function parseDeparture(item, fallbackTrack) {
   if (!item || !item.trip || !item.trip.route) return null;
   if ((item.trip.route.mode || "").toUpperCase() !== "RAIL") return null;
 
-  const seconds = item.realtimeDeparture ?? item.scheduledDeparture;
-  const epoch = item.serviceDay + seconds;
+  const serviceDay = Number(item.serviceDay);
+  const realtimeSeconds = Number(item.realtimeDeparture);
+  const scheduledSeconds = Number(item.scheduledDeparture);
+  const seconds = Number.isFinite(realtimeSeconds) ? realtimeSeconds : scheduledSeconds;
+
+  if (!Number.isFinite(serviceDay) || !Number.isFinite(seconds)) return null;
+
+  const epoch = serviceDay + seconds;
+  const departureDate = new Date(epoch * 1000);
+  if (Number.isNaN(departureDate.getTime())) return null;
 
   return {
     line: item.trip.route.shortName || "Train",
     destination: item.headsign || "",
     track: item.stop?.platformCode || fallbackTrack || null,
-    departureIso: new Date(epoch * 1000).toISOString(),
-    delaySeconds: item.departureDelay || 0,
+    departureIso: departureDate.toISOString(),
   };
 }
 
@@ -53,6 +60,10 @@ module.exports = async (req, res) => {
   const lon = Number(req.query.lon);
 
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return res.status(400).json({ error: "Invalid lat/lon" });
+  }
+
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
     return res.status(400).json({ error: "Invalid lat/lon" });
   }
 
@@ -100,13 +111,11 @@ module.exports = async (req, res) => {
     const stopDeparturesQuery = `
       query StopDepartures($id: String!) {
         stop(id: $id) {
-          name
           platformCode
-          stoptimesWithoutPatterns(numberOfDepartures: 40) {
+          stoptimesWithoutPatterns(numberOfDepartures: 8) {
             serviceDay
             scheduledDeparture
             realtimeDeparture
-            departureDelay
             headsign
             stop {
               platformCode
@@ -125,12 +134,10 @@ module.exports = async (req, res) => {
     const stationDeparturesQuery = `
       query StationDepartures($id: String!) {
         station(id: $id) {
-          name
-          stoptimesWithoutPatterns(numberOfDepartures: 40) {
+          stoptimesWithoutPatterns(numberOfDepartures: 8) {
             serviceDay
             scheduledDeparture
             realtimeDeparture
-            departureDelay
             headsign
             stop {
               platformCode
