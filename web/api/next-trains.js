@@ -48,6 +48,7 @@ function parseDeparture(item, fallbackTrack) {
     destination: item.headsign || "",
     track: item.stop?.platformCode || fallbackTrack || null,
     departureIso: departureDate.toISOString(),
+    delaySeconds: item.departureDelay || 0,
   };
 }
 

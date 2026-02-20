@@ -1,5 +1,14 @@
 # Simple Vercel App: Helsinki Next Trains
 
+## Structure
+
+- `index.html` app shell
+- `scripts/app.js` frontend behavior
+- `styles/main.css` styling
+- `assets/icons/` app icons
+- `api/next-trains.js` Vercel serverless API
+- `vercel.json` Vercel config
+
 ## Local run
 
 1. Install Vercel CLI:

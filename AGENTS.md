@@ -6,7 +6,11 @@ Guidance for agents working in this repository.
 
 This repo is a **web-only** project.
 
-- Frontend: `web/index.html`, `web/app.js`, `web/styles.css`
+- Frontend:
+  - `web/index.html`
+  - `web/scripts/app.js`
+  - `web/styles/main.css`
+  - `web/assets/icons/*`
 - API (Vercel serverless): `web/api/next-trains.js`
 - Vercel config: `web/vercel.json`
 
@@ -62,7 +66,7 @@ From `web/`:
 
 Quick sanity checks:
 
-- `node --check web/app.js`
+- `node --check web/scripts/app.js`
 - `node --check web/api/next-trains.js`
 
 ## Deploy

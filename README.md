@@ -5,7 +5,10 @@ Simple Vercel app that shows next Helsinki commuter trains from the closest stat
 ## Project structure
 
 - `web/` contains the full app
-- `web/index.html` frontend
+- `web/index.html` app shell
+- `web/scripts/app.js` frontend behavior
+- `web/styles/main.css` frontend styles
+- `web/assets/icons/` static app icons
 - `web/api/next-trains.js` Vercel serverless API
 
 ## Deploy on Vercel
