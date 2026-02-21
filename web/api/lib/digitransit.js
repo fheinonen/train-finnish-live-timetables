@@ -2,6 +2,8 @@ const DIGITRANSIT_ENDPOINT = "https://api.digitransit.fi/routing/v2/hsl/gtfs/v1"
 const DIGITRANSIT_TIMEOUT_MS = 7000;
 const MODE_RAIL = "RAIL";
 const MODE_BUS = "BUS";
+const MODE_TRAM = "TRAM";
+const MODE_METRO = "METRO";
 
 const nearbyStopsQuery = `
   query NearbyStops($lat: Float!, $lon: Float!, $radius: Int!) {
@@ -183,6 +185,8 @@ async function graphqlRequest(query, variables) {
 module.exports = {
   MODE_RAIL,
   MODE_BUS,
+  MODE_TRAM,
+  MODE_METRO,
   nearbyStopsQuery,
   stopDeparturesQuery,
   stationDeparturesQuery,

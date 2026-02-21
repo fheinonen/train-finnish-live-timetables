@@ -1,6 +1,8 @@
 const {
   MODE_RAIL,
   MODE_BUS,
+  MODE_TRAM,
+  MODE_METRO,
   nearbyStopsQuery,
   stopDeparturesQuery,
   stationDeparturesQuery,
@@ -24,7 +26,7 @@ function getModeStops(nearbyData, mode) {
   return edges.filter((n) => (n.stop.vehicleMode || "").toUpperCase() === mode);
 }
 
-function buildBusStops(modeStops) {
+function buildSelectableStops(modeStops) {
   const stopGroups = new Map();
 
   for (const node of modeStops) {
@@ -80,7 +82,7 @@ function filterUpcoming(departures, now = Date.now()) {
     .sort((a, b) => new Date(a.departureIso).getTime() - new Date(b.departureIso).getTime());
 }
 
-function dedupeBusDepartures(departures) {
+function dedupeStopDepartures(departures) {
   return departures.filter(
     (departure, index, array) =>
       array.findIndex(
@@ -94,7 +96,7 @@ function dedupeBusDepartures(departures) {
   );
 }
 
-function filterBusBySelections(departures, requestedLines, requestedDestinations) {
+function filterDeparturesBySelections(departures, requestedLines, requestedDestinations) {
   const lineFilterSet = new Set(requestedLines);
   const destinationFilterSet = new Set(requestedDestinations);
 
@@ -139,6 +141,20 @@ function getDefaultResultLimit(mode) {
   return mode === MODE_BUS ? 24 : 8;
 }
 
+function getNoNearbyStopsMessage(mode) {
+  if (mode === MODE_METRO) return "No nearby metro stops";
+  return mode === MODE_TRAM ? "No nearby tram stops" : "No nearby bus stops";
+}
+
+function isStopMode(mode) {
+  return mode === MODE_BUS || mode === MODE_TRAM || mode === MODE_METRO;
+}
+
+function getUpstreamMode(mode) {
+  // Digitransit labels metro routes/stops as SUBWAY while API mode remains METRO.
+  return mode === MODE_METRO ? "SUBWAY" : mode;
+}
+
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
 
@@ -174,31 +190,32 @@ module.exports = async (req, res) => {
   }
 
   try {
+    const upstreamMode = getUpstreamMode(mode);
     const nearbyData = await graphqlRequest(nearbyStopsQuery, {
       lat,
       lon,
       radius: 1200,
     });
 
-    const modeStops = getModeStops(nearbyData, mode);
+    const modeStops = getModeStops(nearbyData, upstreamMode);
 
     if (modeStops.length === 0) {
-      if (mode === MODE_BUS) {
+      if (isStopMode(mode)) {
         return res.status(200).json({
           mode,
           station: null,
           stops: [],
           selectedStopId: null,
           filterOptions: { lines: [], destinations: [] },
-          message: "No nearby bus stops",
+          message: getNoNearbyStopsMessage(mode),
         });
       }
 
       return res.status(200).json({ mode, station: null, message: "No nearby train stations" });
     }
 
-    if (mode === MODE_BUS) {
-      const stops = buildBusStops(modeStops);
+    if (isStopMode(mode)) {
+      const stops = buildSelectableStops(modeStops);
       const requestedStopId = typeof req.query.stopId === "string" ? req.query.stopId.trim() : "";
       const selectedStop =
         stops.find((stop) => stop.id === requestedStopId) ||
@@ -212,7 +229,7 @@ module.exports = async (req, res) => {
           stops: [],
           selectedStopId: null,
           filterOptions: { lines: [], destinations: [] },
-          message: "No nearby bus stops",
+          message: getNoNearbyStopsMessage(mode),
         });
       }
 
@@ -225,17 +242,17 @@ module.exports = async (req, res) => {
       const stopDataList = aliases.map((alias) => ({ stop: multiStopData?.[alias] || null }));
 
       const allDepartures = filterUpcoming(
-        dedupeBusDepartures(
+        dedupeStopDepartures(
           stopDataList.flatMap((stopData) => {
             const items = stopData?.stop?.stoptimesWithoutPatterns || [];
             const fallbackTrack = stopData?.stop?.platformCode || null;
             const fallbackStop = stopData?.stop || null;
-            return items.map((item) => parseDeparture(item, fallbackTrack, mode, fallbackStop));
+            return items.map((item) => parseDeparture(item, fallbackTrack, upstreamMode, fallbackStop));
           })
         )
       );
 
-      const departures = filterBusBySelections(
+      const departures = filterDeparturesBySelections(
         allDepartures,
         requestedLines,
         requestedDestinations
@@ -286,10 +303,9 @@ module.exports = async (req, res) => {
       fallbackTrack = stopData?.stop?.platformCode || null;
     }
 
-    const departures = filterUpcoming(items.map((item) => parseDeparture(item, fallbackTrack, mode))).slice(
-      0,
-      requestedResultLimit
-    );
+    const departures = filterUpcoming(
+      items.map((item) => parseDeparture(item, fallbackTrack, upstreamMode))
+    ).slice(0, requestedResultLimit);
 
     return res.status(200).json({
       mode,
