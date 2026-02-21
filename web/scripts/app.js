@@ -30,6 +30,8 @@ const STORAGE_HELSINKI_ONLY_KEY = "prefs:helsinkiOnly";
 const STORAGE_BUS_STOP_KEY = "prefs:busStopId";
 const STORAGE_BUS_LINES_KEY = "prefs:busLines";
 const STORAGE_BUS_DESTINATIONS_KEY = "prefs:busDestinations";
+const FETCH_TIMEOUT_MS = 8000;
+const ERROR_REPORT_LIMIT = 5;
 
 let isLoading = false;
 let currentCoords = null;
@@ -42,6 +44,7 @@ let busDestinationFilters = [];
 let busStops = [];
 let busFilterOptions = { lines: [], destinations: [] };
 let suppressBusStopChange = false;
+let errorReportCount = 0;
 
 function setLoading(loading) {
   isLoading = loading;
@@ -81,6 +84,55 @@ function setStorageItem(key, value) {
   } catch {
     // Ignore localStorage errors (private mode, disabled storage, quota).
   }
+}
+
+function safeString(value, maxLength) {
+  const text = String(value || "");
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength);
+}
+
+function toError(value) {
+  if (value instanceof Error) return value;
+
+  try {
+    const message = typeof value === "string" ? value : JSON.stringify(value);
+    return new Error(message || "Unknown error");
+  } catch {
+    return new Error(String(value || "Unknown error"));
+  }
+}
+
+function reportClientError(type, rawError, context = null) {
+  if (errorReportCount >= ERROR_REPORT_LIMIT) return;
+  errorReportCount += 1;
+
+  const error = toError(rawError);
+  const payload = {
+    type: safeString(type, 40),
+    message: safeString(error.message, 400),
+    stack: safeString(error.stack || "", 1200),
+    url: safeString(window.location.href, 500),
+    userAgent: safeString(navigator.userAgent || "", 300),
+    timestamp: new Date().toISOString(),
+    context: context && typeof context === "object" ? context : null,
+  };
+
+  const body = JSON.stringify(payload);
+  if (navigator.sendBeacon) {
+    const blob = new Blob([body], { type: "application/json" });
+    navigator.sendBeacon("/api/v1/client-error", blob);
+    return;
+  }
+
+  fetch("/api/v1/client-error", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body,
+    keepalive: true,
+  }).catch(() => {
+    // Ignore reporting failures.
+  });
 }
 
 function normalizeMode(value) {
@@ -529,6 +581,10 @@ function getLoadErrorStatus(error) {
     return "Could not refresh departures. Please try again.";
   }
 
+  if (error.name === "AbortError") {
+    return "Request timed out. Please try again.";
+  }
+
   const message = (error.message || "").trim();
   if (message === "Temporary server error. Please try again.") {
     return message;
@@ -703,19 +759,30 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchWithRetryOnce(url) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function fetchWithRetryOnce(url, options = {}) {
   let res;
 
   try {
-    res = await fetch(url);
+    res = await fetchWithTimeout(url, options);
   } catch {
     await delay(350);
-    return fetch(url);
+    return fetchWithTimeout(url, options);
   }
 
   if (res.status >= 500) {
     await delay(350);
-    return fetch(url);
+    return fetchWithTimeout(url, options);
   }
 
   return res;
@@ -788,6 +855,14 @@ async function load(lat, lon) {
     }
 
     const res = await fetchWithRetryOnce(`/api/v1/departures?${params.toString()}`);
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      if (!res.ok) {
+        throw new Error("Request failed");
+      }
+      throw new Error("Unexpected server response.");
+    }
+
     const json = await res.json();
 
     if (!res.ok) {
@@ -807,6 +882,7 @@ async function load(lat, lon) {
   } catch (err) {
     latestResponse = null;
     console.error("load departures error:", err);
+    reportClientError("load", err, { mode });
     setStatus(getLoadErrorStatus(err));
     resultEl.classList.add("hidden");
     updateNextSummary(null);
@@ -945,4 +1021,16 @@ requestLocationAndLoad();
 setInterval(refreshDeparturesOnly, 30000);
 window.addEventListener("resize", () => {
   requestAnimationFrame(alignDepartureColumns);
+});
+
+window.addEventListener("error", (event) => {
+  reportClientError("error", event.error || event.message || "Unknown error", {
+    source: event.filename || "",
+    line: event.lineno || null,
+    column: event.colno || null,
+  });
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  reportClientError("unhandledrejection", event.reason || "Unhandled promise rejection");
 });
