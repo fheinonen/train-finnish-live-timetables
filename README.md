@@ -24,6 +24,7 @@ Web app for showing nearby Helsinki public transport departures using browser ge
   - Required: `lat`, `lon`, `mode`
   - `mode`: `RAIL`, `TRAM`, `METRO`, or `BUS`
   - BUS/TRAM/METRO optional filters: `stopId`, `line`, `dest`
+  - Metro mode maps to Digitransit's upstream `SUBWAY` route mode
 - `POST /api/v1/client-error`
   - Accepts sanitized client error reports (payload-limited)
 

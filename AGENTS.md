@@ -29,16 +29,16 @@ This repo is a **web-only** project.
 
 ## Purpose
 
-Show nearest Helsinki public transport departures (currently rail + bus) based on browser geolocation.
+Show nearest Helsinki public transport departures (rail + tram + metro + bus) based on browser geolocation.
 
 Key UX requirements currently in use:
 
 - Auto-load location on page open.
 - Auto-refresh departures every 30 seconds.
 - Manual location refresh button.
-- Rail/Bus mode toggle.
+- Rail/Tram/Metro/Bus mode toggle.
 - Rail-only local filter: `Helsinki Only`.
-- Bus controls:
+- Bus/Tram/Metro controls:
   - stop selector
   - line filters
   - destination filters
@@ -57,13 +57,14 @@ Key UX requirements currently in use:
 - Uses Digitransit GraphQL (`routing/v2/hsl/gtfs/v1`).
 - Required query params:
   - `lat`, `lon`, `mode`
-- `mode` supports `RAIL` and `BUS`.
-- BUS mode supports optional query params:
+- `mode` supports `RAIL`, `TRAM`, `METRO`, and `BUS`.
+- BUS/TRAM/METRO modes support optional query params:
   - `stopId`
   - `line` (repeatable or comma-separated)
   - `dest` (repeatable or comma-separated)
 - Resolves nearest relevant station/stop(s) and returns upcoming departures.
-- BUS responses include `stops`, `selectedStopId`, and `filterOptions` for UI controls.
+- BUS/TRAM/METRO responses include `stops`, `selectedStopId`, and `filterOptions` for UI controls.
+- Internally, metro queries map to Digitransit's `SUBWAY` route mode.
 - Sets `Cache-Control: no-store`.
 - Invalid input returns `400`. Invalid method returns `405`.
 - Returns sanitized 500 errors to clients.
@@ -160,6 +161,8 @@ Primary production domain is aliased to:
 ## Common Safe Tests
 
 - `curl -i 'https://helsinkimoves.fheinonen.eu/api/v1/departures?lat=60.1708&lon=24.9375&mode=RAIL'`
+- `curl -i 'https://helsinkimoves.fheinonen.eu/api/v1/departures?lat=60.1708&lon=24.9375&mode=TRAM'`
+- `curl -i 'https://helsinkimoves.fheinonen.eu/api/v1/departures?lat=60.1708&lon=24.9375&mode=METRO'`
 - `curl -i 'https://helsinkimoves.fheinonen.eu/api/v1/departures?lat=60.1708&lon=24.9375&mode=BUS'`
 - Probe expected rejection behavior:
   - invalid params -> `400`

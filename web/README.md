@@ -67,6 +67,8 @@ Vercel runs `npm run build` (configured in `vercel.json`) before deployment.
 ## Notes
 
 - Frontend requests your browser location and calls `/api/v1/departures`.
-- API supports multiple modes via `mode` (currently `RAIL` and `BUS`).
+- API supports multiple modes via `mode` (`RAIL`, `TRAM`, `METRO`, `BUS`).
+- BUS/TRAM/METRO modes support `stopId`, `line`, and `dest` query filters.
+- Metro mode is mapped to Digitransit's upstream `SUBWAY` route mode.
 - Frontend also posts sanitized client errors to `/api/v1/client-error`.
 - Theme supports manual light/dark toggle with system preference fallback.
