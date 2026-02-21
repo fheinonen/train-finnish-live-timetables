@@ -21,18 +21,42 @@
     <main class="page" aria-live="polite">
       <section class="board card">
         <div class="board-top">
-          <p class="eyebrow">HSL Commuter Rail</p>
+          <p id="modeEyebrow" class="eyebrow">HSL Commuter Rail</p>
           <p id="nowClock" class="clock">--:--</p>
         </div>
 
         <div class="controls">
+          <div class="mode-switch" role="group" aria-label="Transport mode">
+            <button id="modeRailBtn" class="secondary mode-toggle" aria-pressed="true">Rail</button>
+            <button id="modeBusBtn" class="secondary mode-toggle" aria-pressed="false">Bus</button>
+          </div>
           <button id="locateBtn">Refresh Location</button>
           <button id="helsinkiOnlyBtn" class="secondary filter-toggle" aria-pressed="false">
             Helsinki Only: Off
           </button>
         </div>
+        <section id="busControls" class="bus-controls hidden" aria-label="Bus controls">
+          <label class="bus-control" for="busStopSelect">
+            <span class="bus-label">Stop</span>
+            <select id="busStopSelect" class="bus-select"></select>
+          </label>
+          <div class="bus-filter-group">
+            <p class="bus-label">Lines</p>
+            <div id="busLineFilters" class="chip-group" role="group" aria-label="Bus line filters"></div>
+          </div>
+          <div class="bus-filter-group">
+            <p class="bus-label">Destinations</p>
+            <div
+              id="busDestinationFilters"
+              class="chip-group"
+              role="group"
+              aria-label="Bus destination filters"
+            ></div>
+          </div>
+        </section>
 
         <p id="status" class="status">Getting your location...</p>
+        <p id="dataScope" class="data-scope hidden">Selected stop: —</p>
         <p id="lastUpdated" class="last-updated">Last updated: —</p>
 
         <section id="result" class="result hidden">
@@ -44,7 +68,7 @@
             <span class="live-pill">Realtime</span>
           </div>
           <div id="nextSummary" class="next-summary hidden" aria-live="polite">
-            <p class="next-label">Next Train</p>
+            <p id="nextLabel" class="next-label">Next Train</p>
             <div class="next-grid">
               <span id="nextLine" class="letter-badge next-letter">—</span>
               <p class="next-mins"><span id="nextMins">—</span></p>
