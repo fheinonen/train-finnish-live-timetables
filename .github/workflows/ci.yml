@@ -16,7 +16,6 @@ jobs:
           node-version-file: "web/package.json"
       - name: Syntax Check (Client)
         run: |
-          node --check web/scripts/app.js
           node --check web/scripts/theme-init.js
           node --check web/scripts/app/01-state.js
           node --check web/scripts/app/02-ui.js

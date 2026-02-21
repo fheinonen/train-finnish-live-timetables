@@ -30,7 +30,6 @@ Web app for showing nearby Helsinki public transport departures using browser ge
 ## Project structure
 
 - `web/index.html` app shell
-- `web/scripts/app.js` legacy placeholder
 - `web/scripts/app/*.js` frontend runtime modules (ordered in `index.html`)
 - `web/scripts/README.md` module boundaries/load order (`window.HMApp` contract)
 - `web/scripts/theme-init.js` early theme initialization
@@ -55,7 +54,6 @@ Quick checks:
 
 From repository root:
 
-- `node --check web/scripts/app.js`
 - `node --check web/scripts/app/01-state.js`
 - `node --check web/scripts/app/02-ui.js`
 - `node --check web/scripts/app/03-data.js`

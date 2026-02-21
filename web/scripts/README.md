@@ -45,4 +45,3 @@ Each file is wrapped in an IIFE and communicates through a shared `window.HMApp`
 - Add cross-module state/refs in `HMApp.state` / `HMApp.dom` via `01-state.js`.
 - Expose cross-module functions by attaching them to `HMApp.api` in the owning module.
 - Avoid introducing new implicit globals.
-- Keep `web/scripts/app.js` as a placeholder only (not runtime logic).
