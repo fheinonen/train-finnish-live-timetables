@@ -1049,3 +1049,19 @@ window.addEventListener("error", (event) => {
 window.addEventListener("unhandledrejection", (event) => {
   reportClientError("unhandledrejection", event.reason || "Unhandled promise rejection");
 });
+
+/* ─── Theme Toggle ─── */
+(() => {
+  const btn = document.getElementById("themeToggle");
+  const root = document.documentElement;
+  const stored = localStorage.getItem("theme");
+  if (stored) root.setAttribute("data-theme", stored);
+
+  btn.addEventListener("click", () => {
+    const isDark = root.getAttribute("data-theme") === "dark" ||
+      (!root.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+    const next = isDark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    localStorage.setItem("theme", next);
+  });
+})();
