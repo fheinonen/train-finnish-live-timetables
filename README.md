@@ -4,12 +4,12 @@ Web app for showing nearby Helsinki public transport departures using browser ge
 
 ## Current status
 
-- Transport modes: `RAIL` and `BUS`
+- Transport modes: `RAIL`, `TRAM`, `METRO`, and `BUS`
 - Auto-loads location on page open
 - Auto-refreshes departures every 30 seconds
 - Manual refresh button
 - Rail filter: `Helsinki Only`
-- Bus controls:
+- Bus/Tram/Metro controls:
   - nearest stop selector
   - line filters
   - destination filters
@@ -22,8 +22,8 @@ Web app for showing nearby Helsinki public transport departures using browser ge
 
 - `GET /api/v1/departures`
   - Required: `lat`, `lon`, `mode`
-  - `mode`: `RAIL` or `BUS`
-  - BUS optional filters: `stopId`, `line`, `dest`
+  - `mode`: `RAIL`, `TRAM`, `METRO`, or `BUS`
+  - BUS/TRAM/METRO optional filters: `stopId`, `line`, `dest`
 - `POST /api/v1/client-error`
   - Accepts sanitized client error reports (payload-limited)
 
