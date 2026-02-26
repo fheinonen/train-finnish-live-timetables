@@ -1,12 +1,75 @@
-/* ─── Custom Properties ─── */
+/* ═══════════════════════════════════════════
+   Design Tokens — Helsinki Moves
+   Single source of truth for all visual values.
+   ═══════════════════════════════════════════ */
+
 :root {
+  /* ─── Spacing Scale ─── */
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 10px;
+  --space-5: 12px;
+  --space-6: 14px;
+  --space-7: 16px;
+  --space-8: 20px;
+  --space-9: 24px;
+  --space-10: 28px;
+  --space-11: 32px;
+  --space-12: 40px;
+
+  /* ─── Type Scale ─── */
+  --text-2xs: 0.64rem;   /* 10.24px — pills, micro labels */
+  --text-xs: 0.68rem;    /* 10.88px — eyebrow, labels */
+  --text-sm: 0.72rem;    /* 11.52px — chips, metadata */
+  --text-base: 0.82rem;  /* 13.12px — body, controls */
+  --text-md: 0.84rem;    /* 13.44px — status text */
+  --text-lg: 0.88rem;    /* 14.08px — destinations, secondary headings */
+  --text-xl: 0.92rem;    /* 14.72px — clock */
+  --text-2xl: 1.05rem;   /* 16.8px — badge text, h2-like */
+  --text-3xl: clamp(1.05rem, 2.6vw, 1.35rem);  /* responsive h2 */
+  --text-4xl: clamp(1.5rem, 5vw, 2rem);         /* next-departure hero */
+  --text-5xl: clamp(1.7rem, 4.2vw, 2.5rem);     /* h1 */
+
+  /* ─── Font Stacks ─── */
+  --font-sans: "Outfit", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* ─── Font Weights ─── */
+  --weight-normal: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+
+  /* ─── Leading ─── */
+  --leading-none: 1;
+  --leading-tight: 1.08;
+  --leading-snug: 1.1;
+  --leading-normal: 1.3;
+  --leading-relaxed: 1.35;
+  --leading-loose: 1.5;
+
+  /* ─── Tracking ─── */
+  --tracking-tighter: -0.01em;
+  --tracking-normal: 0.01em;
+  --tracking-wide: 0.05em;
+  --tracking-wider: 0.08em;
+  --tracking-widest: 0.1em;
+
+  /* ─── Surfaces (Dark — default) ─── */
   --bg: #080c16;
   --bg-card: rgba(13, 19, 33, 0.85);
+  --bg-card-solid: linear-gradient(180deg, rgba(14, 21, 36, 0.85), rgba(10, 16, 30, 0.9));
   --bg-elevated: rgba(20, 28, 45, 0.6);
   --border: rgba(148, 180, 210, 0.07);
+
+  /* ─── Text Colors ─── */
   --text: #eef2f7;
   --text-secondary: #8a9bb0;
   --text-muted: #4f6373;
+
+  /* ─── Accent Colors ─── */
   --cyan: #7cb8cf;
   --cyan-soft: rgba(124, 184, 207, 0.06);
   --amber: #d4a96a;
@@ -14,10 +77,82 @@
   --emerald: #7bbf9e;
   --emerald-soft: rgba(123, 191, 158, 0.05);
   --slate: #64748b;
+
+  /* ─── Interactive Colors (derived from accents) ─── */
+  --interactive-bg: rgba(124, 184, 207, 0.05);
+  --interactive-bg-hover: rgba(124, 184, 207, 0.1);
+  --interactive-border: rgba(124, 184, 207, 0.1);
+  --interactive-border-hover: rgba(124, 184, 207, 0.2);
+  --interactive-text: var(--cyan);
+
+  --interactive-secondary-bg: rgba(123, 191, 158, 0.05);
+  --interactive-secondary-bg-hover: rgba(123, 191, 158, 0.1);
+  --interactive-secondary-border: rgba(123, 191, 158, 0.1);
+  --interactive-secondary-border-hover: rgba(123, 191, 158, 0.2);
+  --interactive-secondary-text: var(--emerald);
+
+  --interactive-active-bg: rgba(123, 191, 158, 0.1);
+  --interactive-active-border: rgba(123, 191, 158, 0.25);
+  --interactive-active-text: var(--emerald);
+
+  /* ─── Departure State Colors ─── */
+  --departure-now-bg: linear-gradient(180deg, rgba(212, 169, 106, 0.05), rgba(212, 169, 106, 0.02));
+  --departure-now-border: rgba(212, 169, 106, 0.08);
+  --departure-now-accent: var(--amber);
+  --departure-now-badge: linear-gradient(135deg, #c49555, #a87d42);
+  --departure-now-badge-shadow: 0 3px 10px rgba(196, 149, 85, 0.2);
+
+  --departure-soon-bg: linear-gradient(180deg, rgba(124, 184, 207, 0.03), rgba(124, 184, 207, 0.01));
+  --departure-soon-border: rgba(124, 184, 207, 0.06);
+  --departure-soon-accent: var(--cyan);
+
+  --departure-default-badge: linear-gradient(135deg, #4a8fa5, #3a7589);
+  --departure-default-badge-shadow: 0 3px 10px rgba(74, 143, 165, 0.2);
+
+  /* ─── Shadows ─── */
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   --shadow-sm: 0 3px 12px rgba(0, 0, 0, 0.15);
-  --badge-size: 38px;
+
+  /* ─── Radii ─── */
   --radius: 16px;
   --radius-sm: 10px;
-}
+  --radius-xs: 8px;
+  --radius-badge: 14px;
+  --radius-pill: 999px;
+  --radius-track: 6px;
 
+  /* ─── Sizes ─── */
+  --badge-size: 38px;
+  --page-max-width: 600px;
+  --theme-toggle-size: 30px;
+
+  /* ─── Motion ─── */
+  --ease-default: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-medium: 250ms;
+  --duration-slow: 500ms;
+  --duration-entrance: 600ms;
+  --row-stagger: 70ms;
+
+  /* ─── Scrollbar ─── */
+  --scrollbar-thumb: rgba(148, 180, 210, 0.15);
+  --scrollbar-thumb-hover: rgba(148, 180, 210, 0.25);
+
+  /* ─── Selection ─── */
+  --selection-bg: rgba(124, 184, 207, 0.2);
+  --selection-text: #fff;
+
+  /* ─── Background Atmosphere ─── */
+  --atmosphere-1: rgba(124, 184, 207, 0.04);
+  --atmosphere-2: rgba(123, 191, 158, 0.03);
+  --atmosphere-3: rgba(212, 169, 106, 0.015);
+
+  /* ─── Skeleton ─── */
+  --skeleton-base: rgba(148, 180, 210, 0.06);
+  --skeleton-shine: rgba(148, 180, 210, 0.12);
+
+  /* ─── Board ─── */
+  --board-accent: rgba(124, 184, 207, 0.4);
+}

@@ -1,23 +1,23 @@
 /* ─── Result ─── */
 .result {
-  margin-top: 6px;
-  padding-top: 8px;
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--border);
-  animation: fade-in-up 600ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  animation: fade-in-up var(--duration-entrance) var(--ease-default) both;
 }
 
 .result-head {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-5);
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: var(--space-2);
 }
 
 .result-head-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-3);
   flex-shrink: 0;
 }
 
@@ -25,23 +25,23 @@
 .live-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   background: var(--emerald-soft);
   color: var(--emerald);
   border: 1px solid rgba(123, 191, 158, 0.12);
-  border-radius: 999px;
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
-  padding: 5px 10px 5px 8px;
+  padding: 5px var(--space-4) 5px var(--space-3);
   flex-shrink: 0;
 }
 
 .live-pill::before {
   content: "";
-  width: 6px;
-  height: 6px;
+  width: var(--space-2);
+  height: var(--space-2);
   border-radius: 50%;
   background: var(--emerald);
   flex-shrink: 0;
@@ -50,27 +50,27 @@
 
 /* ─── Next Summary ─── */
 .next-summary {
-  margin: 6px 0 8px;
-  padding: 10px 12px;
+  margin: var(--space-3) 0 var(--space-5);
+  padding: var(--space-7) var(--space-7);
   border: 1px solid var(--border);
   border-left: 3px solid var(--cyan);
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
   box-shadow: var(--shadow-sm);
-  transition: all 200ms ease;
+  transition: all var(--duration-normal) ease;
 }
 
 .next-summary-now {
-  background: linear-gradient(180deg, rgba(212, 169, 106, 0.05), rgba(212, 169, 106, 0.02));
-  border-color: rgba(212, 169, 106, 0.1);
-  border-left-color: var(--amber);
+  background: var(--departure-now-bg);
+  border-color: var(--departure-now-border);
+  border-left-color: var(--departure-now-accent);
   box-shadow: var(--shadow-sm);
 }
 
 .next-summary-soon {
-  background: linear-gradient(180deg, rgba(124, 184, 207, 0.04), rgba(124, 184, 207, 0.01));
-  border-color: rgba(124, 184, 207, 0.08);
-  border-left-color: var(--cyan);
+  background: var(--departure-soon-bg);
+  border-color: var(--departure-soon-border);
+  border-left-color: var(--departure-soon-accent);
   box-shadow: var(--shadow-sm);
 }
 
@@ -81,29 +81,30 @@
 }
 
 .next-label {
-  margin: 0 0 4px;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .next-grid {
   display: grid;
   grid-template-columns: var(--badge-size) minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: var(--space-4);
 }
 
 .next-mins {
   margin: 0;
-  font-family: "JetBrains Mono", monospace;
-  font-size: clamp(1.5rem, 5vw, 2rem);
-  line-height: 1;
+  font-family: var(--font-mono);
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  line-height: var(--leading-none);
   color: var(--text);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tighter);
 }
 
 .next-summary-now .next-mins {
@@ -111,43 +112,39 @@
 }
 
 .next-letter {
-  min-width: 38px;
-  height: 38px;
+  min-width: var(--badge-size);
+  height: var(--badge-size);
   font-size: 1rem;
 }
 
 .next-letter-now {
-  background: linear-gradient(135deg, #c49555, #a87d42);
-  box-shadow: 0 3px 10px rgba(196, 149, 85, 0.2);
+  background: var(--departure-now-badge);
+  box-shadow: var(--departure-now-badge-shadow);
 }
 
 .next-chip {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 8px;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-xs);
   font-size: 0.74rem;
   color: var(--text-secondary);
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.03);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .next-destination {
   margin: 5px 0 0;
-  font-size: 0.88rem;
+  font-size: var(--text-lg);
   color: var(--text-secondary);
-  line-height: 1.3;
+  line-height: var(--leading-normal);
 }
 
 .next-track-row {
   margin: 5px 0 0;
 }
 
-/* ─── Departures ─── */
-.hidden {
-  display: none;
-}
-
+/* ─── Departures List ─── */
 ul {
   list-style: none;
   padding: 0;
@@ -155,36 +152,36 @@ ul {
 }
 
 .departures {
-  margin-top: 4px;
+  margin-top: var(--space-1);
   display: grid;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 li {
-  padding: 10px 12px;
+  padding: var(--space-4) var(--space-5);
   border: 1px solid var(--border);
   border-left: 3px solid transparent;
   background: var(--bg-elevated);
   border-radius: var(--radius-sm);
   display: grid;
-  grid-template-columns: var(--badge-size) minmax(0, 1fr);
+  grid-template-columns: var(--badge-size) 1fr auto;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   --i: 0;
-  animation: row-enter 500ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
-  animation-delay: calc(var(--i) * 70ms);
+  animation: row-enter var(--duration-slow) var(--ease-default) both;
+  animation-delay: calc(var(--i) * var(--row-stagger));
 }
 
 .departure-now {
-  background: linear-gradient(180deg, rgba(212, 169, 106, 0.05), rgba(212, 169, 106, 0.02));
-  border-color: rgba(212, 169, 106, 0.08);
-  border-left-color: var(--amber);
+  background: var(--departure-now-bg);
+  border-color: var(--departure-now-border);
+  border-left-color: var(--departure-now-accent);
 }
 
 .departure-soon {
-  background: linear-gradient(180deg, rgba(124, 184, 207, 0.03), rgba(124, 184, 207, 0.01));
-  border-color: rgba(124, 184, 207, 0.06);
-  border-left-color: var(--cyan);
+  background: var(--departure-soon-bg);
+  border-color: var(--departure-soon-border);
+  border-left-color: var(--departure-soon-accent);
 }
 
 .departure-later {
@@ -198,46 +195,32 @@ li {
 .letter-badge {
   min-width: var(--badge-size);
   height: var(--badge-size);
-  border-radius: 14px;
+  border-radius: var(--radius-badge);
   display: grid;
   place-items: center;
-  font-family: "Outfit", sans-serif;
-  font-weight: 800;
-  font-size: 1.05rem;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-extrabold);
+  font-size: var(--text-2xl);
   color: #fff;
-  background: linear-gradient(135deg, #4a8fa5, #3a7589);
-  box-shadow: 0 3px 10px rgba(74, 143, 165, 0.2);
+  background: var(--departure-default-badge);
+  box-shadow: var(--departure-default-badge-shadow);
 }
 
 .departure-now .letter-badge {
-  background: linear-gradient(135deg, #c49555, #a87d42);
-  box-shadow: 0 3px 10px rgba(196, 149, 85, 0.2);
+  background: var(--departure-now-badge);
+  box-shadow: var(--departure-now-badge-shadow);
 }
 
 /* ─── Train Info ─── */
 .train {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
-}
-
-.train-top {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
-.line {
-  font-weight: 700;
-  color: var(--text);
-  margin-right: 2px;
 }
 
 .destination {
-  font-size: 0.82rem;
+  font-size: var(--text-base);
   color: var(--text-secondary);
-  flex: 0 1 auto;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -246,31 +229,32 @@ li {
 
 .track {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 6px;
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-track);
   font-size: 0.7rem;
   color: var(--text-secondary);
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.02);
   width: fit-content;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .time {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
+  display: grid;
+  justify-items: end;
+  gap: 2px;
   color: var(--text);
   white-space: nowrap;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .remaining {
   display: inline;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 1rem;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .departure-now .remaining {
@@ -279,21 +263,48 @@ li {
 
 .clock-time {
   display: inline;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
-  font-weight: 400;
-  font-family: "JetBrains Mono", monospace;
+  font-weight: var(--weight-normal);
+  font-family: var(--font-mono);
+}
+
+/* ─── Skeleton Loading ─── */
+.skeleton {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.skeleton-next,
+.skeleton-row {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base) 0%,
+    var(--skeleton-shine) 40%,
+    var(--skeleton-base) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-next {
+  height: 120px;
+}
+
+.skeleton-row {
+  height: 60px;
 }
 
 li.empty-row {
   display: block;
   color: var(--text-muted);
-  font-size: 0.88rem;
-  padding: 16px 12px;
+  font-size: var(--text-lg);
+  padding: var(--space-7) var(--space-5);
   text-align: center;
   border: none;
   background: transparent;
   box-shadow: none;
   animation: none;
 }
-

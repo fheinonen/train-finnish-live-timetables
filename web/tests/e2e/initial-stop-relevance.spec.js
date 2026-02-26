@@ -90,7 +90,7 @@ test("first stop-mode load ignores stale stop/filter state and uses nearest stop
   expect(firstCall.searchParams.get("mode")).toBe("BUS");
   expect(firstCall.searchParams.has("stopId")).toBeFalsy();
 
-  await expect(page.locator("#busStopSelect")).toHaveValue("HSL:NEAR");
+  await expect(page.locator("#busStopSelectLabel")).toHaveText(/Nearest Stop/);
 
   await expect.poll(() => new URL(page.url()).searchParams.get("stop")).toBe("HSL:NEAR");
   await expect.poll(() => new URL(page.url()).searchParams.getAll("line").length).toBe(0);
@@ -128,14 +128,16 @@ test("persisted stop context is only restored after explicit user re-selection",
 
   await expect.poll(() => departuresCalls.length).toBeGreaterThan(0);
   expect(departuresCalls[0].searchParams.has("stopId")).toBeFalsy();
-  await expect(page.locator("#busStopSelect")).toHaveValue("HSL:NEAR");
+  await expect(page.locator("#busStopSelectLabel")).toHaveText(/Nearest Stop/);
 
-  await page.selectOption("#busStopSelect", "HSL:OLD");
+  // Open custom dropdown and select HSL:OLD
+  await page.click("#busStopSelect");
+  await page.click('#busStopSelectList li[data-value="HSL:OLD"]');
 
   await expect.poll(() => departuresCalls.length).toBeGreaterThan(1);
   const secondCall = departuresCalls[1];
   expect(secondCall.searchParams.get("stopId")).toBe("HSL:OLD");
 
-  await expect(page.locator("#busStopSelect")).toHaveValue("HSL:OLD");
+  await expect(page.locator("#busStopSelectLabel")).toHaveText(/Old Terminal/);
   await expect.poll(() => new URL(page.url()).searchParams.get("stop")).toBe("HSL:OLD");
 });

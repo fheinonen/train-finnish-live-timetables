@@ -33,11 +33,12 @@
         </div>
 
         <div class="controls">
-          <div class="mode-switch" role="group" aria-label="Transport mode">
-            <button id="modeRailBtn" class="mode-toggle" aria-pressed="true">Rail</button>
-            <button id="modeTramBtn" class="mode-toggle" aria-pressed="false">Tram</button>
-            <button id="modeMetroBtn" class="mode-toggle" aria-pressed="false">Metro</button>
-            <button id="modeBusBtn" class="mode-toggle" aria-pressed="false">Bus</button>
+          <div class="segment-control" role="radiogroup" aria-label="Transport mode">
+            <button id="modeRailBtn" class="segment" role="radio" aria-checked="true">Rail</button>
+            <button id="modeTramBtn" class="segment" role="radio" aria-checked="false">Tram</button>
+            <button id="modeMetroBtn" class="segment" role="radio" aria-checked="false">Metro</button>
+            <button id="modeBusBtn" class="segment" role="radio" aria-checked="false">Bus</button>
+            <div class="segment-indicator" aria-hidden="true"></div>
           </div>
           <button id="locateBtn">Refresh Location</button>
           <button
@@ -77,10 +78,17 @@
           <button id="voiceLocationChoicesCancel" class="secondary" type="button">Cancel</button>
         </section>
         <section id="busControls" class="bus-controls hidden" aria-label="Stop controls">
-          <label class="bus-control" for="busStopSelect">
+          <div class="bus-control">
             <span class="bus-label">Stop</span>
-            <select id="busStopSelect" class="bus-select"></select>
-          </label>
+            <div class="custom-select" id="busStopSelectWrap">
+              <button type="button" id="busStopSelect" class="custom-select-trigger"
+                      role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                <span id="busStopSelectLabel">Select stop</span>
+                <svg class="custom-select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <ul id="busStopSelectList" class="custom-select-list hidden" role="listbox"></ul>
+            </div>
+          </div>
           <div class="bus-filter-group">
             <p class="bus-label">Lines</p>
             <div id="busLineFilters" class="chip-group" role="group" aria-label="Line filters"></div>
@@ -100,6 +108,13 @@
         <p id="dataScope" class="data-scope hidden">Selected stop: —</p>
         <p id="lastUpdated" class="last-updated">Last updated: —</p>
 
+        <div id="skeleton" class="skeleton hidden">
+          <div class="skeleton-next"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row"></div>
+        </div>
         <section id="result" class="result hidden">
           <div class="result-head">
             <div>

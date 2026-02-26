@@ -1,38 +1,38 @@
 /* ─── Layout ─── */
 .page {
-  max-width: 600px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 16px 14px 28px;
+  padding: var(--space-7) var(--space-6) var(--space-10);
   display: grid;
-  gap: 12px;
+  gap: var(--space-5);
 }
 
 /* ─── Typography ─── */
 h1,
 h2 {
-  font-family: "Outfit", sans-serif;
+  font-family: var(--font-sans);
   margin: 0;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tighter);
 }
 
 h1 {
-  font-size: clamp(1.7rem, 4.2vw, 2.5rem);
-  line-height: 1.08;
+  font-size: var(--text-5xl);
+  line-height: var(--leading-tight);
 }
 
 h2 {
-  font-size: clamp(1.05rem, 2.6vw, 1.35rem);
+  font-size: var(--text-3xl);
   color: var(--text);
 }
 
 .eyebrow {
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 0.68rem;
+  letter-spacing: var(--tracking-widest);
+  font-size: var(--text-xs);
   color: var(--cyan);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .muted {
@@ -42,7 +42,7 @@ h2 {
 
 /* ─── Card ─── */
 .card {
-  background: linear-gradient(180deg, rgba(14, 21, 36, 0.85), rgba(10, 16, 30, 0.9));
+  background: var(--bg-card-solid);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -52,25 +52,25 @@ h2 {
 
 /* ─── Board ─── */
 .board {
-  padding: 14px 16px 12px;
-  border-top: 1px solid rgba(124, 184, 207, 0.4);
-  animation: fade-in-up 600ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  padding: var(--space-6) var(--space-7) var(--space-5);
+  border-top: 1px solid var(--board-accent);
+  animation: fade-in-up var(--duration-entrance) var(--ease-default) both;
 }
 
 .board-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-3);
 }
 
 .clock {
   margin: 0;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   color: var(--text);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  font-size: 0.92rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  font-size: var(--text-xl);
   font-variant-numeric: tabular-nums;
   opacity: 0.6;
 }
@@ -78,28 +78,83 @@ h2 {
 .board-top-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-4);
 }
 
 /* ─── Theme Toggle ─── */
 .theme-toggle {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: var(--theme-toggle-size);
+  height: var(--theme-toggle-size);
   padding: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 250ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all var(--duration-medium) var(--ease-default);
 }
 
 .theme-toggle:hover {
   color: var(--text);
-  border-color: rgba(124, 184, 207, 0.2);
-  background: rgba(124, 184, 207, 0.06);
+  border-color: var(--interactive-border-hover);
+  background: var(--cyan-soft);
+}
+
+/* ─── Segmented Control ─── */
+.segment-control {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--interactive-bg);
+  border: 1px solid var(--interactive-border);
+  border-radius: var(--radius-xs);
+  padding: 3px;
+  gap: 2px;
+  --active-index: 0;
+}
+
+.segment {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  padding: 5px var(--space-3);
+  border: none;
+  border-radius: calc(var(--radius-xs) - 2px);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: color var(--duration-normal) var(--ease-default);
+}
+
+.segment:hover {
+  color: var(--text);
+  background: transparent;
+  border: none;
+}
+
+.segment.is-active {
+  color: var(--interactive-active-text);
+  background: transparent;
+  border: none;
+}
+
+.segment-indicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px - 6px) / 4);
+  border-radius: calc(var(--radius-xs) - 2px);
+  background: var(--interactive-active-bg);
+  border: 1px solid var(--interactive-active-border);
+  transform: translateX(calc(var(--active-index) * (100% + 2px)));
+  transition: transform var(--duration-medium) var(--ease-out);
+  pointer-events: none;
 }
 
 .theme-icon { display: none; }
@@ -108,4 +163,3 @@ h2 {
 
 [data-theme="dark"] .theme-icon.moon { display: none; }
 [data-theme="dark"] .theme-icon.sun { display: block; }
-

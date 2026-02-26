@@ -81,24 +81,66 @@
     refreshWithCurrentLocationOrRequest();
   });
 
-  dom.busStopSelectEl?.addEventListener("change", () => {
-    if (
-      state.suppressBusStopChange ||
-      (state.mode !== MODE_BUS && state.mode !== MODE_TRAM && state.mode !== MODE_METRO)
-    ) {
+  /* ─── Custom Stop Dropdown ─── */
+  dom.busStopSelectEl?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    api.toggleStopDropdown();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!dom.busStopSelectWrapEl) return;
+    if (!dom.busStopSelectWrapEl.contains(e.target)) {
+      api.toggleStopDropdown(false);
+    }
+  });
+
+  dom.busStopSelectEl?.addEventListener("keydown", (e) => {
+    const listEl = dom.busStopSelectListEl;
+    if (!listEl) return;
+
+    const isOpen = dom.busStopSelectEl.getAttribute("aria-expanded") === "true";
+
+    if (e.key === "Escape") {
+      api.toggleStopDropdown(false);
+      dom.busStopSelectEl.focus();
+      e.preventDefault();
       return;
     }
 
-    const nextStopId = String(dom.busStopSelectEl.value || "").trim();
-    if (!nextStopId || nextStopId === state.busStopId) return;
+    if (e.key === "Enter" || e.key === " ") {
+      if (!isOpen) {
+        api.toggleStopDropdown(true);
+        e.preventDefault();
+        return;
+      }
+      const focused = listEl.querySelector(".is-focused");
+      if (focused?.dataset?.value) {
+        api.selectStop(focused.dataset.value);
+      }
+      e.preventDefault();
+      return;
+    }
 
-    api.trackFirstManualInteraction("stop_select", { currentMode: state.mode });
-    api.trackFirstManualStopContextChange("stop_select", { selectedStopId: nextStopId });
-    state.busStopId = nextStopId;
-    api.persistUiState();
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!isOpen) {
+        api.toggleStopDropdown(true);
+        return;
+      }
+      const items = [...listEl.querySelectorAll("li[role='option']")];
+      if (items.length === 0) return;
 
-    if (state.currentCoords) {
-      api.load(state.currentCoords.lat, state.currentCoords.lon);
+      const currentIdx = items.findIndex((item) => item.classList.contains("is-focused"));
+      let nextIdx;
+      if (e.key === "ArrowDown") {
+        nextIdx = currentIdx < items.length - 1 ? currentIdx + 1 : 0;
+      } else {
+        nextIdx = currentIdx > 0 ? currentIdx - 1 : items.length - 1;
+      }
+
+      for (const item of items) item.classList.remove("is-focused");
+      items[nextIdx].classList.add("is-focused");
+      items[nextIdx].scrollIntoView({ block: "nearest" });
     }
   });
 
@@ -121,10 +163,6 @@
   setInterval(api.updateClock, 1000);
   api.requestLocationAndLoad();
   setInterval(api.refreshDeparturesOnly, 30000);
-
-  window.addEventListener("resize", () => {
-    requestAnimationFrame(api.alignDepartureColumns);
-  });
 
   window.addEventListener("error", (event) => {
     api.reportClientError("error", event.error || event.message || "Unknown error", {

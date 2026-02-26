@@ -21,6 +21,15 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 @keyframes pulse-dot {
   0%,
   100% {
@@ -33,15 +42,26 @@
   }
 }
 
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 640px) {
   .page {
-    padding: 8px 8px 16px;
-    gap: 8px;
+    padding: var(--space-3) var(--space-3) var(--space-7);
+    gap: var(--space-3);
   }
 
   .board {
-    padding: 8px 10px 8px;
+    padding: var(--space-3) var(--space-4) var(--space-3);
   }
 
   .result-head {
@@ -50,7 +70,6 @@
   }
 
   li {
-    gap: 8px;
+    gap: var(--space-3);
   }
 }
-

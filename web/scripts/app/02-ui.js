@@ -79,28 +79,22 @@
   }
 
   function updateModeButtons() {
-    if (dom.modeRailBtn) {
-      const railActive = state.mode === MODE_RAIL;
-      dom.modeRailBtn.setAttribute("aria-pressed", String(railActive));
-      dom.modeRailBtn.classList.toggle("is-active", railActive);
-    }
+    const modeButtons = [
+      { el: dom.modeRailBtn, mode: MODE_RAIL, index: 0 },
+      { el: dom.modeTramBtn, mode: MODE_TRAM, index: 1 },
+      { el: dom.modeMetroBtn, mode: MODE_METRO, index: 2 },
+      { el: dom.modeBusBtn, mode: MODE_BUS, index: 3 },
+    ];
 
-    if (dom.modeTramBtn) {
-      const tramActive = state.mode === MODE_TRAM;
-      dom.modeTramBtn.setAttribute("aria-pressed", String(tramActive));
-      dom.modeTramBtn.classList.toggle("is-active", tramActive);
-    }
-
-    if (dom.modeMetroBtn) {
-      const metroActive = state.mode === MODE_METRO;
-      dom.modeMetroBtn.setAttribute("aria-pressed", String(metroActive));
-      dom.modeMetroBtn.classList.toggle("is-active", metroActive);
-    }
-
-    if (dom.modeBusBtn) {
-      const busActive = state.mode === MODE_BUS;
-      dom.modeBusBtn.setAttribute("aria-pressed", String(busActive));
-      dom.modeBusBtn.classList.toggle("is-active", busActive);
+    for (const { el, mode, index } of modeButtons) {
+      if (!el) continue;
+      const active = state.mode === mode;
+      el.setAttribute("aria-checked", String(active));
+      el.classList.toggle("is-active", active);
+      if (active) {
+        const container = el.closest(".segment-control");
+        if (container) container.style.setProperty("--active-index", index);
+      }
     }
   }
 
@@ -270,34 +264,78 @@
     }
   }
 
+  function toggleStopDropdown(forceOpen) {
+    if (!dom.busStopSelectEl || !dom.busStopSelectListEl) return;
+    const isOpen = dom.busStopSelectEl.getAttribute("aria-expanded") === "true";
+    const nextOpen = typeof forceOpen === "boolean" ? forceOpen : !isOpen;
+    dom.busStopSelectEl.setAttribute("aria-expanded", String(nextOpen));
+    dom.busStopSelectListEl.classList.toggle("hidden", !nextOpen);
+  }
+
+  function selectStop(stopId) {
+    if (state.suppressBusStopChange) return;
+    if (!stopId || stopId === state.busStopId) {
+      toggleStopDropdown(false);
+      return;
+    }
+
+    api.trackFirstManualInteraction("stop_select", { currentMode: state.mode });
+    api.trackFirstManualStopContextChange("stop_select", { selectedStopId: stopId });
+    state.busStopId = stopId;
+    api.persistUiState();
+    toggleStopDropdown(false);
+
+    if (dom.busStopSelectLabelEl) {
+      const stop = state.busStops.find((s) => s.id === stopId);
+      dom.busStopSelectLabelEl.textContent = stop
+        ? `${stop.name} (${stop.distanceMeters}m)`
+        : stopId;
+    }
+
+    if (state.currentCoords) {
+      api.load(state.currentCoords.lat, state.currentCoords.lon);
+    }
+  }
+
   function renderStopControls() {
     const visible = isStopMode();
     setStopControlsVisibility(visible);
     if (!visible) return;
 
-    if (dom.busStopSelectEl) {
+    if (dom.busStopSelectListEl) {
       state.suppressBusStopChange = true;
-      dom.busStopSelectEl.innerHTML = "";
+      dom.busStopSelectListEl.innerHTML = "";
 
       if (state.busStops.length === 0) {
-        const option = document.createElement("option");
-        option.value = "";
-        option.textContent = `No nearby ${getStopModeLabel().singular} stops`;
-        dom.busStopSelectEl.appendChild(option);
-        dom.busStopSelectEl.disabled = true;
+        if (dom.busStopSelectLabelEl) {
+          dom.busStopSelectLabelEl.textContent = `No nearby ${getStopModeLabel().singular} stops`;
+        }
+        if (dom.busStopSelectEl) dom.busStopSelectEl.disabled = true;
       } else {
-        dom.busStopSelectEl.disabled = false;
-        for (const stop of state.busStops) {
-          const option = document.createElement("option");
-          option.value = stop.id;
-          option.textContent = `${stop.name} (${stop.distanceMeters}m)`;
-          dom.busStopSelectEl.appendChild(option);
+        if (dom.busStopSelectEl) dom.busStopSelectEl.disabled = false;
+
+        let selectedId = state.busStopId;
+        if (!selectedId || !state.busStops.some((s) => s.id === selectedId)) {
+          selectedId = state.busStops[0].id;
         }
 
-        if (state.busStopId && state.busStops.some((stop) => stop.id === state.busStopId)) {
-          dom.busStopSelectEl.value = state.busStopId;
-        } else {
-          dom.busStopSelectEl.value = state.busStops[0].id;
+        for (const stop of state.busStops) {
+          const li = document.createElement("li");
+          li.setAttribute("role", "option");
+          li.dataset.value = stop.id;
+          li.textContent = `${stop.name} (${stop.distanceMeters}m)`;
+          if (stop.id === selectedId) {
+            li.setAttribute("aria-selected", "true");
+          }
+          li.addEventListener("click", () => selectStop(stop.id));
+          dom.busStopSelectListEl.appendChild(li);
+        }
+
+        if (dom.busStopSelectLabelEl) {
+          const selectedStop = state.busStops.find((s) => s.id === selectedId);
+          dom.busStopSelectLabelEl.textContent = selectedStop
+            ? `${selectedStop.name} (${selectedStop.distanceMeters}m)`
+            : "Select stop";
         }
       }
 
@@ -488,41 +526,16 @@
     return "Could not use voice location. Please try again.";
   }
 
-  function alignDepartureColumns() {
-    const rows = [...document.querySelectorAll(".departure-row .train-top")];
-    if (rows.length === 0) return;
+  function showSkeleton() {
+    if (dom.skeletonEl) dom.skeletonEl.classList.remove("hidden");
+  }
 
-    const destinations = rows.map((row) => row.querySelector(".destination")).filter(Boolean);
-
-    for (const destination of destinations) {
-      destination.style.width = "auto";
-    }
-
-    let widestDestination = 0;
-    for (const destination of destinations) {
-      widestDestination = Math.max(widestDestination, Math.ceil(destination.scrollWidth));
-    }
-
-    let maxAllowed = Number.POSITIVE_INFINITY;
-    for (const row of rows) {
-      const time = row.querySelector(".time");
-      if (!time) continue;
-
-      const rowStyle = getComputedStyle(row);
-      const gap = parseFloat(rowStyle.columnGap || rowStyle.gap || "0") || 0;
-      const available = row.clientWidth - time.offsetWidth - gap;
-      if (available > 0) {
-        maxAllowed = Math.min(maxAllowed, available);
-      }
-    }
-
-    const targetWidth = Math.max(0, Math.min(widestDestination, maxAllowed));
-    for (const destination of destinations) {
-      destination.style.width = `${targetWidth}px`;
-    }
+  function hideSkeleton() {
+    if (dom.skeletonEl) dom.skeletonEl.classList.add("hidden");
   }
 
   function render(data) {
+    hideSkeleton();
     renderStopControls();
     updateDataScope(data);
 
@@ -583,16 +596,22 @@
       letterBadge.className = "letter-badge";
       letterBadge.textContent = item.line || "?";
 
-      const left = document.createElement("div");
-      left.className = "train";
-
-      const top = document.createElement("div");
-      top.className = "train-top";
+      const train = document.createElement("div");
+      train.className = "train";
 
       const destination = document.createElement("div");
       destination.className = "destination";
       destination.textContent = item.destination || "—";
-      top.appendChild(destination);
+      train.appendChild(destination);
+
+      const track = document.createElement("span");
+      track.className = "track";
+      if (isStopMode()) {
+        track.textContent = `Stop ${buildModeStopDisplay(station, item)}`;
+      } else {
+        track.textContent = item.track ? `Track ${item.track}` : "Track —";
+      }
+      train.appendChild(track);
 
       const time = document.createElement("div");
       time.className = "time";
@@ -609,24 +628,13 @@
       });
       time.appendChild(remaining);
       time.appendChild(clockTime);
-      top.appendChild(time);
-      left.appendChild(top);
-
-      const track = document.createElement("span");
-      track.className = "track";
-      if (isStopMode()) {
-        track.textContent = `Stop ${buildModeStopDisplay(station, item)}`;
-      } else {
-        track.textContent = item.track ? `Track ${item.track}` : "Track —";
-      }
-      left.appendChild(track);
 
       li.appendChild(letterBadge);
-      li.appendChild(left);
+      li.appendChild(train);
+      li.appendChild(time);
       dom.departuresEl.appendChild(li);
     }
 
-    requestAnimationFrame(alignDepartureColumns);
   }
 
   function updateClock() {
@@ -657,13 +665,16 @@
     buildModeStopDisplay,
     updateDataScope,
     renderFilterButtons,
+    toggleStopDropdown,
+    selectStop,
     renderStopControls,
     updateNextSummary,
     buildStatusFromResponse,
     getLoadErrorStatus,
     getGeolocationErrorStatus,
     getVoiceLocationErrorStatus,
-    alignDepartureColumns,
+    showSkeleton,
+    hideSkeleton,
     render,
     updateClock,
   });

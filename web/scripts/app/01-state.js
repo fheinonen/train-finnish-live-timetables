@@ -7,6 +7,8 @@
     locateBtn: document.getElementById("locateBtn"),
     voiceLocateBtn: document.getElementById("voiceLocateBtn"),
     voiceLocateBtnLabel: document.getElementById("voiceLocateBtnLabel"),
+    skeletonEl: document.getElementById("skeleton"),
+    segmentControlEl: document.querySelector(".segment-control"),
     modeRailBtn: document.getElementById("modeRailBtn"),
     modeTramBtn: document.getElementById("modeTramBtn"),
     modeMetroBtn: document.getElementById("modeMetroBtn"),
@@ -14,6 +16,9 @@
     helsinkiOnlyBtn: document.getElementById("helsinkiOnlyBtn"),
     busControlsEl: document.getElementById("busControls"),
     busStopSelectEl: document.getElementById("busStopSelect"),
+    busStopSelectLabelEl: document.getElementById("busStopSelectLabel"),
+    busStopSelectListEl: document.getElementById("busStopSelectList"),
+    busStopSelectWrapEl: document.getElementById("busStopSelectWrap"),
     busLineFiltersEl: document.getElementById("busLineFilters"),
     busDestinationFiltersEl: document.getElementById("busDestinationFilters"),
     resultsLimitSelectEl: document.getElementById("resultsLimitSelect"),
@@ -131,6 +136,9 @@
   function setLoading(loading) {
     state.isLoading = loading;
     updateLocationActionButtons();
+    if (loading && dom.skeletonEl) {
+      dom.skeletonEl.classList.remove("hidden");
+    }
   }
 
   function setVoiceListening(listening) {
