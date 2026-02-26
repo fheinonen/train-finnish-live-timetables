@@ -78,7 +78,7 @@ function buildSelectableStops(modeStops) {
 function filterUpcoming(departures, now = Date.now()) {
   return departures
     .filter(Boolean)
-    .filter((d) => new Date(d.departureIso).getTime() >= now - 60 * 1000)
+    .filter((d) => new Date(d.departureIso).getTime() > now)
     .sort((a, b) => new Date(a.departureIso).getTime() - new Date(b.departureIso).getTime());
 }
 

@@ -31,9 +31,50 @@ function parseRequestedResultLimit(rawValue, defaultValue) {
   return parsed;
 }
 
+function normalizePickDropType(rawType) {
+  if (rawType == null || rawType === "") return null;
+  if (typeof rawType === "number") {
+    return Number.isInteger(rawType) ? rawType : null;
+  }
+
+  const asNumber = Number(rawType);
+  if (Number.isInteger(asNumber)) return asNumber;
+
+  const normalized = String(rawType).trim().toUpperCase();
+  if (!normalized) return null;
+
+  if (
+    normalized === "NONE" ||
+    normalized === "NO_PICKUP" ||
+    normalized === "NO_DROPOFF" ||
+    normalized === "NOT_AVAILABLE"
+  ) {
+    return 1;
+  }
+
+  if (normalized === "MUST_PHONE" || normalized === "PHONE_AGENCY") {
+    return 2;
+  }
+
+  if (
+    normalized === "MUST_COORDINATE_WITH_DRIVER" ||
+    normalized === "COORDINATE_WITH_DRIVER"
+  ) {
+    return 3;
+  }
+
+  return 0;
+}
+
+function isBoardableStopTime(item) {
+  const pickupType = normalizePickDropType(item?.pickupType);
+  return pickupType !== 1;
+}
+
 function parseDeparture(item, fallbackTrack, expectedMode, fallbackStop = null) {
   if (!item || !item.trip || !item.trip.route) return null;
   if ((item.trip.route.mode || "").toUpperCase() !== expectedMode) return null;
+  if (!isBoardableStopTime(item)) return null;
 
   const serviceDay = Number(item.serviceDay);
   const realtimeSeconds = Number(item.realtimeDeparture);
@@ -92,6 +133,8 @@ module.exports = {
   parseRequestedMode,
   parseMultiQueryParam,
   parseRequestedResultLimit,
+  normalizePickDropType,
+  isBoardableStopTime,
   parseDeparture,
   buildFilterOptions,
 };

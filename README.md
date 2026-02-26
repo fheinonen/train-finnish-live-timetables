@@ -28,6 +28,20 @@ Web app for showing nearby Helsinki public transport departures using browser ge
 - `POST /api/v1/client-error`
   - Accepts sanitized client error reports (payload-limited)
 
+## Client Metric Events
+
+Frontend also emits lightweight sampled metric events to `POST /api/v1/client-error`
+with `type: "metric"` and `context.metricName`.
+
+- `first_successful_render`
+  - `context` keys: `sessionElapsedMs`, `mode`, `requestMode`, `hasStation`, `departureCount`
+- `initial_nearest_stop_resolved`
+  - `context` keys: `sessionElapsedMs`, `mode`, `requestMode`, `selectedStopId`, `distanceMeters`, `departureCount`
+- `first_manual_interaction`
+  - `context` keys: `sessionElapsedMs`, `mode`, `interactionType` (+ optional interaction-specific keys)
+- `first_manual_stop_context_change`
+  - `context` keys: `sessionElapsedMs`, `mode`, `changeType`, `lineFilterCount`, `destinationFilterCount`
+
 ## Project structure
 
 - `web/index.html` app shell

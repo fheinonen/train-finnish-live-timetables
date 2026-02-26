@@ -315,6 +315,8 @@
           state.busLineFilters = [...state.busLineFilters, value];
         }
 
+        api.trackFirstManualInteraction("line_filter_toggle", { currentMode: state.mode });
+        api.trackFirstManualStopContextChange("line_filter_toggle");
         api.persistUiState();
         if (state.latestResponse) {
           api.render(state.latestResponse);
@@ -334,6 +336,8 @@
           state.busDestinationFilters = [...state.busDestinationFilters, value];
         }
 
+        api.trackFirstManualInteraction("destination_filter_toggle", { currentMode: state.mode });
+        api.trackFirstManualStopContextChange("destination_filter_toggle");
         api.persistUiState();
         if (state.latestResponse) {
           api.render(state.latestResponse);
@@ -390,11 +394,11 @@
     const next = visibleDepartures[0];
     if (!next) {
       if (isStopMode()) {
-        const servicePlural = getStopModeLabel().plural;
         if (state.busLineFilters.length > 0 || state.busDestinationFilters.length > 0) {
+          const servicePlural = getStopModeLabel().plural;
           return `No upcoming ${servicePlural} match selected filters.`;
         }
-        return `No upcoming ${servicePlural} right now.`;
+        return "No upcoming departures from this stop.";
       }
 
       return state.helsinkiOnly
@@ -542,11 +546,10 @@
       const li = document.createElement("li");
       li.className = "empty-row";
       if (isStopMode()) {
-        const servicePlural = getStopModeLabel().plural;
         li.textContent =
           state.busLineFilters.length > 0 || state.busDestinationFilters.length > 0
-            ? `No upcoming ${servicePlural} match selected filters.`
-            : `No upcoming ${servicePlural} right now.`;
+            ? `No upcoming ${getStopModeLabel().plural} match selected filters.`
+            : "No upcoming departures from this stop.";
       } else {
         li.textContent = state.helsinkiOnly
           ? "No Helsinki-bound trains in upcoming departures."

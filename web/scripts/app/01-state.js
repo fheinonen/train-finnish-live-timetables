@@ -64,6 +64,8 @@
     VOICE_QUERY_MIN_LENGTH: 3,
     FETCH_TIMEOUT_MS: 8000,
     ERROR_REPORT_LIMIT: 5,
+    METRIC_REPORT_LIMIT: 10,
+    METRIC_SAMPLE_RATE: 1,
   };
 
   const { MODE_RAIL, MODE_TRAM, MODE_METRO, MODE_BUS } = app.constants;
@@ -78,6 +80,10 @@
     busStopId: null,
     busLineFilters: [],
     busDestinationFilters: [],
+    deferInitialStopContext: false,
+    deferredBusStopId: null,
+    deferredBusLineFilters: [],
+    deferredBusDestinationFilters: [],
     resultsLimitByMode: {
       [MODE_RAIL]: app.constants.DEFAULT_RESULTS_LIMIT_RAIL,
       [MODE_TRAM]: app.constants.DEFAULT_RESULTS_LIMIT_TRAM,
@@ -88,7 +94,15 @@
     busFilterOptions: { lines: [], destinations: [] },
     resolvedLocationHint: null,
     suppressBusStopChange: false,
+    hasCompletedInitialStopModeLoad: false,
     errorReportCount: 0,
+    metricReportCount: 0,
+    isMetricSessionSampled: Math.random() < app.constants.METRIC_SAMPLE_RATE,
+    sessionStartedAtMs: Date.now(),
+    hasReportedFirstSuccessfulRenderMetric: false,
+    hasReportedFirstManualInteractionMetric: false,
+    hasReportedFirstManualStopContextMetric: false,
+    hasReportedInitialNearestStopResolvedMetric: false,
     latestLoadToken: 0,
   };
 
@@ -212,21 +226,7 @@
     }
   }
 
-  function reportClientError(type, rawError, context = null) {
-    if (state.errorReportCount >= constants.ERROR_REPORT_LIMIT) return;
-    state.errorReportCount += 1;
-
-    const error = toError(rawError);
-    const payload = {
-      type: safeString(type, 40),
-      message: safeString(error.message, 400),
-      stack: safeString(error.stack || "", 1200),
-      url: safeString(window.location.href, 500),
-      userAgent: safeString(navigator.userAgent || "", 300),
-      timestamp: new Date().toISOString(),
-      context: context && typeof context === "object" ? context : null,
-    };
-
+  function sendClientReport(payload) {
     const body = JSON.stringify(payload);
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: "application/json" });
@@ -241,6 +241,106 @@
       keepalive: true,
     }).catch(() => {
       // Ignore reporting failures.
+    });
+  }
+
+  function reportClientError(type, rawError, context = null) {
+    if (state.errorReportCount >= constants.ERROR_REPORT_LIMIT) return;
+    state.errorReportCount += 1;
+
+    const error = toError(rawError);
+    const payload = {
+      type: safeString(type, 40),
+      message: safeString(error.message, 400),
+      stack: safeString(error.stack || "", 1200),
+      url: safeString(window.location.href, 500),
+      userAgent: safeString(navigator.userAgent || "", 300),
+      timestamp: new Date().toISOString(),
+      context: context && typeof context === "object" ? context : null,
+    };
+    sendClientReport(payload);
+  }
+
+  function getSessionElapsedMs() {
+    return Math.max(0, Date.now() - state.sessionStartedAtMs);
+  }
+
+  function reportClientMetric(name, context = null) {
+    if (!state.isMetricSessionSampled) return false;
+    if (state.metricReportCount >= constants.METRIC_REPORT_LIMIT) return false;
+
+    state.metricReportCount += 1;
+    const payload = {
+      type: "metric",
+      message: safeString(name, 400),
+      stack: "",
+      url: safeString(window.location.href, 500),
+      userAgent: safeString(navigator.userAgent || "", 300),
+      timestamp: new Date().toISOString(),
+      context: {
+        metricName: safeString(name, 80),
+        sessionElapsedMs: getSessionElapsedMs(),
+        mode: state.mode,
+        ...(context && typeof context === "object" ? context : {}),
+      },
+    };
+
+    sendClientReport(payload);
+    return true;
+  }
+
+  function trackFirstSuccessfulRender(responseData, requestMode) {
+    if (state.hasReportedFirstSuccessfulRenderMetric) return;
+    state.hasReportedFirstSuccessfulRenderMetric = true;
+
+    const departures = Array.isArray(responseData?.station?.departures)
+      ? responseData.station.departures
+      : [];
+    reportClientMetric("first_successful_render", {
+      requestMode: String(requestMode || "").trim(),
+      hasStation: Boolean(responseData?.station),
+      departureCount: departures.length,
+    });
+  }
+
+  function trackFirstManualInteraction(interactionType, context = null) {
+    if (state.hasReportedFirstManualInteractionMetric) return;
+    state.hasReportedFirstManualInteractionMetric = true;
+    reportClientMetric("first_manual_interaction", {
+      interactionType: safeString(interactionType, 80),
+      ...(context && typeof context === "object" ? context : {}),
+    });
+  }
+
+  function trackFirstManualStopContextChange(changeType, context = null) {
+    if (state.hasReportedFirstManualStopContextMetric) return;
+    state.hasReportedFirstManualStopContextMetric = true;
+    reportClientMetric("first_manual_stop_context_change", {
+      changeType: safeString(changeType, 80),
+      lineFilterCount: state.busLineFilters.length,
+      destinationFilterCount: state.busDestinationFilters.length,
+      ...(context && typeof context === "object" ? context : {}),
+    });
+  }
+
+  function trackInitialNearestStopResolved(responseData, requestMode) {
+    if (state.hasReportedInitialNearestStopResolvedMetric) return;
+
+    const selectedStopId = String(responseData?.selectedStopId || "").trim();
+    if (!selectedStopId) return;
+
+    state.hasReportedInitialNearestStopResolvedMetric = true;
+    const stops = Array.isArray(responseData?.stops) ? responseData.stops : [];
+    const selectedStop = stops.find((stop) => stop?.id === selectedStopId) || null;
+    const departures = Array.isArray(responseData?.station?.departures)
+      ? responseData.station.departures
+      : [];
+
+    reportClientMetric("initial_nearest_stop_resolved", {
+      requestMode: String(requestMode || "").trim(),
+      selectedStopId,
+      distanceMeters: Number(selectedStop?.distanceMeters) || null,
+      departureCount: departures.length,
     });
   }
 
@@ -318,6 +418,10 @@
   }
 
   function hydrateInitialState() {
+    // Precedence matrix for stop-mode context on session start:
+    // 1) Current-session user actions (once interaction happens)
+    // 2) Nearest geolocated defaults from first successful API load
+    // 3) Persisted URL/localStorage state (deferred, never auto-applied on first load)
     const urlState = readStateFromUrl();
     const storedMode = normalizeMode(getStorageItem(constants.STORAGE_MODE_KEY));
     const storedHelsinkiOnly = parseBoolean(getStorageItem(constants.STORAGE_HELSINKI_ONLY_KEY));
@@ -329,14 +433,34 @@
     }
 
     const storedStopId = String(getStorageItem(constants.STORAGE_BUS_STOP_KEY) || "").trim() || null;
-    state.busStopId = urlState.stopProvided ? urlState.busStopId : storedStopId;
+    const hydratedStopId = urlState.stopProvided ? urlState.busStopId : storedStopId;
 
     const storedLines = parseStoredArray(constants.STORAGE_BUS_LINES_KEY);
     const storedDestinations = parseStoredArray(constants.STORAGE_BUS_DESTINATIONS_KEY);
-    state.busLineFilters = urlState.linesProvided ? urlState.busLines : storedLines;
-    state.busDestinationFilters = urlState.destinationsProvided
+    const hydratedLines = urlState.linesProvided ? urlState.busLines : storedLines;
+    const hydratedDestinations = urlState.destinationsProvided
       ? urlState.busDestinations
       : storedDestinations;
+
+    const hasPersistedStopContext =
+      Boolean(hydratedStopId) || hydratedLines.length > 0 || hydratedDestinations.length > 0;
+    state.deferInitialStopContext = hasPersistedStopContext;
+
+    if (hasPersistedStopContext) {
+      state.deferredBusStopId = hydratedStopId;
+      state.deferredBusLineFilters = [...hydratedLines];
+      state.deferredBusDestinationFilters = [...hydratedDestinations];
+      state.busStopId = null;
+      state.busLineFilters = [];
+      state.busDestinationFilters = [];
+    } else {
+      state.deferredBusStopId = null;
+      state.deferredBusLineFilters = [];
+      state.deferredBusDestinationFilters = [];
+      state.busStopId = hydratedStopId;
+      state.busLineFilters = hydratedLines;
+      state.busDestinationFilters = hydratedDestinations;
+    }
 
     const storedRailResultsLimit = parseResultLimit(
       getStorageItem(constants.STORAGE_RESULTS_LIMIT_RAIL_KEY)
@@ -457,7 +581,14 @@
     setStorageItem,
     safeString,
     toError,
+    sendClientReport,
     reportClientError,
+    reportClientMetric,
+    getSessionElapsedMs,
+    trackFirstSuccessfulRender,
+    trackFirstManualInteraction,
+    trackFirstManualStopContextChange,
+    trackInitialNearestStopResolved,
     normalizeMode,
     parseBoolean,
     uniqueNonEmptyStrings,

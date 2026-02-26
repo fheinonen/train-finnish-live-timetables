@@ -14,15 +14,18 @@
   }
 
   dom.locateBtn?.addEventListener("click", () => {
+    api.trackFirstManualInteraction("refresh_location_click");
     api.requestLocationAndLoad();
   });
 
   dom.voiceLocateBtn?.addEventListener("click", () => {
+    api.trackFirstManualInteraction("voice_location_click");
     api.requestVoiceLocationAndLoad();
   });
 
   dom.modeRailBtn?.addEventListener("click", () => {
     if (state.mode === MODE_RAIL) return;
+    api.trackFirstManualInteraction("mode_change", { toMode: MODE_RAIL });
     state.mode = MODE_RAIL;
     api.applyModeUiState();
     api.persistUiState();
@@ -31,6 +34,7 @@
 
   dom.modeTramBtn?.addEventListener("click", () => {
     if (state.mode === MODE_TRAM) return;
+    api.trackFirstManualInteraction("mode_change", { toMode: MODE_TRAM });
     state.mode = MODE_TRAM;
     state.helsinkiOnly = false;
     api.applyModeUiState();
@@ -40,6 +44,7 @@
 
   dom.modeMetroBtn?.addEventListener("click", () => {
     if (state.mode === MODE_METRO) return;
+    api.trackFirstManualInteraction("mode_change", { toMode: MODE_METRO });
     state.mode = MODE_METRO;
     state.helsinkiOnly = false;
     api.applyModeUiState();
@@ -49,6 +54,7 @@
 
   dom.modeBusBtn?.addEventListener("click", () => {
     if (state.mode === MODE_BUS) return;
+    api.trackFirstManualInteraction("mode_change", { toMode: MODE_BUS });
     state.mode = MODE_BUS;
     state.helsinkiOnly = false;
     api.applyModeUiState();
@@ -66,6 +72,10 @@
     const currentLimit = api.getActiveResultsLimit();
     if (currentLimit === nextLimit) return;
 
+    api.trackFirstManualInteraction("results_limit_change", {
+      nextLimit,
+      currentMode: state.mode,
+    });
     state.resultsLimitByMode[state.mode] = nextLimit;
     api.persistUiState();
     refreshWithCurrentLocationOrRequest();
@@ -82,6 +92,8 @@
     const nextStopId = String(dom.busStopSelectEl.value || "").trim();
     if (!nextStopId || nextStopId === state.busStopId) return;
 
+    api.trackFirstManualInteraction("stop_select", { currentMode: state.mode });
+    api.trackFirstManualStopContextChange("stop_select", { selectedStopId: nextStopId });
     state.busStopId = nextStopId;
     api.persistUiState();
 
@@ -92,6 +104,7 @@
 
   dom.helsinkiOnlyBtn?.addEventListener("click", () => {
     if (state.mode !== MODE_RAIL) return;
+    api.trackFirstManualInteraction("helsinki_only_toggle");
     state.helsinkiOnly = !state.helsinkiOnly;
     api.persistUiState();
     api.updateHelsinkiFilterButton();
@@ -103,7 +116,6 @@
   });
 
   api.hydrateInitialState();
-  api.persistUiState();
   api.applyModeUiState();
   api.updateClock();
   setInterval(api.updateClock, 1000);

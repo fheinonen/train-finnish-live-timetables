@@ -95,6 +95,17 @@
       state.busStopId = stops[0]?.id || null;
     }
 
+    if (state.deferInitialStopContext) {
+      state.deferInitialStopContext = false;
+      state.deferredBusStopId = null;
+      state.deferredBusLineFilters = [];
+      state.deferredBusDestinationFilters = [];
+      state.busLineFilters = [];
+      state.busDestinationFilters = [];
+    }
+
+    state.hasCompletedInitialStopModeLoad = true;
+
     const departures = Array.isArray(responseData?.station?.departures)
       ? responseData.station.departures
       : [];
@@ -591,6 +602,7 @@
     const loadToken = ++state.latestLoadToken;
     const requestMode = state.mode;
     const requestBusStopId = state.busStopId;
+    const wasInitialStopModeLoad = isStopMode(requestMode) && !state.hasCompletedInitialStopModeLoad;
 
     api.setLoading(true);
     api.setStatus("Loading departures...");
@@ -603,7 +615,12 @@
         results: String(api.getActiveResultsLimit(requestMode)),
       });
 
-      if (isStopMode(requestMode) && requestBusStopId) {
+      // Keep first stop-mode request nearest-first; persisted stop context is only
+      // restored if user explicitly re-selects it during this session.
+      const skipPersistedStopContext =
+        isStopMode(requestMode) &&
+        (state.deferInitialStopContext || !state.hasCompletedInitialStopModeLoad);
+      if (isStopMode(requestMode) && requestBusStopId && !skipPersistedStopContext) {
         params.set("stopId", requestBusStopId);
       }
 
@@ -629,6 +646,9 @@
       if (isStopMode(requestMode)) {
         updateStopModeStateFromResponse(json);
         api.persistUiState();
+        if (wasInitialStopModeLoad) {
+          api.trackInitialNearestStopResolved(json, requestMode);
+        }
       }
 
       state.latestResponse = json;
@@ -636,6 +656,7 @@
       api.setPermissionRequired(false);
       api.setLastUpdated(new Date());
       api.setStatus(api.buildStatusFromResponse(json));
+      api.trackFirstSuccessfulRender(json, requestMode);
     } catch (err) {
       if (loadToken !== state.latestLoadToken) {
         return;

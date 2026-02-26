@@ -36,7 +36,11 @@ const stopDeparturesQuery = `
         serviceDay
         scheduledDeparture
         realtimeDeparture
+        scheduledArrival
+        realtimeArrival
         departureDelay
+        pickupType
+        dropoffType
         headsign
         stop {
           gtfsId
@@ -62,7 +66,11 @@ const stationDeparturesQuery = `
         serviceDay
         scheduledDeparture
         realtimeDeparture
+        scheduledArrival
+        realtimeArrival
         departureDelay
+        pickupType
+        dropoffType
         headsign
         stop {
           platformCode
@@ -107,7 +115,11 @@ function buildMultiStopDeparturesQuery(stopIds, departures) {
           serviceDay
           scheduledDeparture
           realtimeDeparture
+          scheduledArrival
+          realtimeArrival
           departureDelay
+          pickupType
+          dropoffType
           headsign
           stop {
             gtfsId
