@@ -1,158 +1,139 @@
-/* ═══════════════════════════════════════════
-   Design Tokens — Helsinki Moves
-   Single source of truth for all visual values.
-   ═══════════════════════════════════════════ */
-
 :root {
-  /* ─── Spacing Scale ─── */
   --space-0: 0px;
   --space-1: 4px;
-  --space-2: 6px;
-  --space-3: 8px;
-  --space-4: 10px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
   --space-5: 12px;
-  --space-6: 14px;
+  --space-6: 24px;
   --space-7: 16px;
-  --space-8: 20px;
+  --space-8: 32px;
   --space-9: 24px;
   --space-10: 28px;
   --space-11: 32px;
   --space-12: 40px;
 
-  /* ─── Type Scale ─── */
-  --text-2xs: 0.64rem;   /* 10.24px — pills, micro labels */
-  --text-xs: 0.68rem;    /* 10.88px — eyebrow, labels */
-  --text-sm: 0.72rem;    /* 11.52px — chips, metadata */
-  --text-base: 0.82rem;  /* 13.12px — body, controls */
-  --text-md: 0.84rem;    /* 13.44px — status text */
-  --text-lg: 0.88rem;    /* 14.08px — destinations, secondary headings */
-  --text-xl: 0.92rem;    /* 14.72px — clock */
-  --text-2xl: 1.05rem;   /* 16.8px — badge text, h2-like */
-  --text-3xl: clamp(1.05rem, 2.6vw, 1.35rem);  /* responsive h2 */
-  --text-4xl: clamp(1.5rem, 5vw, 2rem);         /* next-departure hero */
-  --text-5xl: clamp(1.7rem, 4.2vw, 2.5rem);     /* h1 */
+  --text-2xs: 0.62rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 0.9rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: clamp(1.3rem, 3vw, 1.7rem);
+  --text-4xl: clamp(2rem, 6.5vw, 3rem);
+  --text-5xl: clamp(2.4rem, 7.6vw, 3.8rem);
 
-  /* ─── Font Stacks ─── */
-  --font-sans: "Outfit", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-display: "Fraunces", "Times New Roman", serif;
+  --font-body: "Manrope", "Trebuchet MS", sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+  --font-sans: var(--font-body);
 
-  /* ─── Font Weights ─── */
-  --weight-normal: 400;
+  --weight-normal: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
   --weight-extrabold: 800;
 
-  /* ─── Leading ─── */
   --leading-none: 1;
-  --leading-tight: 1.08;
-  --leading-snug: 1.1;
-  --leading-normal: 1.3;
-  --leading-relaxed: 1.35;
-  --leading-loose: 1.5;
+  --leading-tight: 1.1;
+  --leading-snug: 1.2;
+  --leading-normal: 1.35;
+  --leading-relaxed: 1.45;
+  --leading-loose: 1.55;
 
-  /* ─── Tracking ─── */
-  --tracking-tighter: -0.01em;
+  --tracking-tighter: -0.02em;
   --tracking-normal: 0.01em;
-  --tracking-wide: 0.05em;
-  --tracking-wider: 0.08em;
-  --tracking-widest: 0.1em;
+  --tracking-wide: 0.06em;
+  --tracking-wider: 0.09em;
+  --tracking-widest: 0.13em;
 
-  /* ─── Surfaces (Dark — default) ─── */
-  --bg: #080c16;
-  --bg-card: rgba(13, 19, 33, 0.85);
-  --bg-card-solid: linear-gradient(180deg, rgba(14, 21, 36, 0.85), rgba(10, 16, 30, 0.9));
-  --bg-elevated: rgba(20, 28, 45, 0.6);
-  --border: rgba(148, 180, 210, 0.07);
+  --bg: #090d17;
+  --bg-card: rgba(13, 20, 34, 0.88);
+  --bg-card-solid: linear-gradient(155deg, rgba(12, 19, 33, 0.96), rgba(10, 16, 28, 0.98));
+  --bg-elevated: rgba(20, 30, 49, 0.7);
+  --surface-0: #080c16;
+  --surface-1: #0d1321;
+  --surface-2: #141c2d;
+  --surface-3: #1e2a3f;
+  --border: rgba(154, 182, 185, 0.14);
 
-  /* ─── Text Colors ─── */
-  --text: #eef2f7;
-  --text-secondary: #8a9bb0;
-  --text-muted: #4f6373;
+  --text: #f6f7f2;
+  --text-secondary: #bcc8cd;
+  --text-muted: #73848d;
 
-  /* ─── Accent Colors ─── */
-  --cyan: #7cb8cf;
-  --cyan-soft: rgba(124, 184, 207, 0.06);
-  --amber: #d4a96a;
-  --amber-soft: rgba(212, 169, 106, 0.05);
-  --emerald: #7bbf9e;
-  --emerald-soft: rgba(123, 191, 158, 0.05);
-  --slate: #64748b;
+  --cyan: #86b3bf;
+  --cyan-soft: rgba(134, 179, 191, 0.1);
+  --amber: #f1bf6f;
+  --amber-soft: rgba(241, 191, 111, 0.1);
+  --emerald: #77c1a7;
+  --emerald-soft: rgba(119, 193, 167, 0.1);
+  --slate: #95a6ad;
 
-  /* ─── Interactive Colors (derived from accents) ─── */
-  --interactive-bg: rgba(124, 184, 207, 0.05);
-  --interactive-bg-hover: rgba(124, 184, 207, 0.1);
-  --interactive-border: rgba(124, 184, 207, 0.1);
-  --interactive-border-hover: rgba(124, 184, 207, 0.2);
-  --interactive-text: var(--cyan);
+  --interactive-bg: rgba(134, 179, 191, 0.08);
+  --interactive-bg-hover: rgba(134, 179, 191, 0.16);
+  --interactive-border: rgba(134, 179, 191, 0.2);
+  --interactive-border-hover: rgba(134, 179, 191, 0.34);
+  --interactive-text: #d8edf2;
 
-  --interactive-secondary-bg: rgba(123, 191, 158, 0.05);
-  --interactive-secondary-bg-hover: rgba(123, 191, 158, 0.1);
-  --interactive-secondary-border: rgba(123, 191, 158, 0.1);
-  --interactive-secondary-border-hover: rgba(123, 191, 158, 0.2);
-  --interactive-secondary-text: var(--emerald);
+  --interactive-secondary-bg: rgba(119, 193, 167, 0.08);
+  --interactive-secondary-bg-hover: rgba(119, 193, 167, 0.15);
+  --interactive-secondary-border: rgba(119, 193, 167, 0.2);
+  --interactive-secondary-border-hover: rgba(119, 193, 167, 0.34);
+  --interactive-secondary-text: #d5f2e8;
 
-  --interactive-active-bg: rgba(123, 191, 158, 0.1);
-  --interactive-active-border: rgba(123, 191, 158, 0.25);
-  --interactive-active-text: var(--emerald);
+  --interactive-active-bg: rgba(241, 191, 111, 0.15);
+  --interactive-active-border: rgba(241, 191, 111, 0.45);
+  --interactive-active-text: #ffe6bc;
 
-  /* ─── Departure State Colors ─── */
-  --departure-now-bg: linear-gradient(180deg, rgba(212, 169, 106, 0.05), rgba(212, 169, 106, 0.02));
-  --departure-now-border: rgba(212, 169, 106, 0.08);
-  --departure-now-accent: var(--amber);
-  --departure-now-badge: linear-gradient(135deg, #c49555, #a87d42);
-  --departure-now-badge-shadow: 0 3px 10px rgba(196, 149, 85, 0.2);
+  --departure-now-bg: linear-gradient(140deg, rgba(241, 191, 111, 0.24), rgba(241, 191, 111, 0.1));
+  --departure-now-border: rgba(241, 191, 111, 0.45);
+  --departure-now-accent: #f9c574;
+  --departure-now-badge: linear-gradient(150deg, #ffcb78, #d6914f);
+  --departure-now-badge-shadow: 0 10px 24px rgba(241, 191, 111, 0.35);
 
-  --departure-soon-bg: linear-gradient(180deg, rgba(124, 184, 207, 0.03), rgba(124, 184, 207, 0.01));
-  --departure-soon-border: rgba(124, 184, 207, 0.06);
-  --departure-soon-accent: var(--cyan);
+  --departure-soon-bg: linear-gradient(140deg, rgba(134, 179, 191, 0.18), rgba(134, 179, 191, 0.08));
+  --departure-soon-border: rgba(134, 179, 191, 0.32);
+  --departure-soon-accent: #9ad2df;
 
-  --departure-default-badge: linear-gradient(135deg, #4a8fa5, #3a7589);
-  --departure-default-badge-shadow: 0 3px 10px rgba(74, 143, 165, 0.2);
+  --departure-default-badge: linear-gradient(145deg, #5f96a3, #3e6e7f);
+  --departure-default-badge-shadow: 0 10px 22px rgba(64, 117, 132, 0.34);
 
-  /* ─── Shadows ─── */
-  --shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 3px 12px rgba(0, 0, 0, 0.15);
+  --shadow: 0 34px 60px rgba(0, 0, 0, 0.42);
+  --shadow-sm: 0 12px 24px rgba(0, 0, 0, 0.28);
 
-  /* ─── Radii ─── */
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-xs: 8px;
+  --radius: 24px;
+  --radius-sm: 16px;
+  --radius-xs: 12px;
   --radius-badge: 14px;
   --radius-pill: 999px;
-  --radius-track: 6px;
+  --radius-track: 10px;
 
-  /* ─── Sizes ─── */
-  --badge-size: 38px;
-  --page-max-width: 600px;
-  --theme-toggle-size: 30px;
+  --badge-size: 42px;
+  --page-max-width: 760px;
+  --theme-toggle-size: 34px;
 
-  /* ─── Motion ─── */
-  --ease-default: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-default: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 150ms;
-  --duration-normal: 200ms;
-  --duration-medium: 250ms;
-  --duration-slow: 500ms;
-  --duration-entrance: 600ms;
-  --row-stagger: 70ms;
+  --duration-normal: 250ms;
+  --duration-medium: 280ms;
+  --duration-slow: 460ms;
+  --duration-entrance: 760ms;
+  --row-stagger: 56ms;
 
-  /* ─── Scrollbar ─── */
-  --scrollbar-thumb: rgba(148, 180, 210, 0.15);
-  --scrollbar-thumb-hover: rgba(148, 180, 210, 0.25);
+  --scrollbar-thumb: rgba(188, 200, 205, 0.34);
+  --scrollbar-thumb-hover: rgba(188, 200, 205, 0.56);
 
-  /* ─── Selection ─── */
-  --selection-bg: rgba(124, 184, 207, 0.2);
-  --selection-text: #fff;
+  --selection-bg: rgba(134, 179, 191, 0.35);
+  --selection-text: #ffffff;
 
-  /* ─── Background Atmosphere ─── */
-  --atmosphere-1: rgba(124, 184, 207, 0.04);
-  --atmosphere-2: rgba(123, 191, 158, 0.03);
-  --atmosphere-3: rgba(212, 169, 106, 0.015);
+  --atmosphere-1: rgba(108, 178, 196, 0.22);
+  --atmosphere-2: rgba(255, 196, 117, 0.13);
+  --atmosphere-3: rgba(84, 152, 132, 0.2);
 
-  /* ─── Skeleton ─── */
-  --skeleton-base: rgba(148, 180, 210, 0.06);
-  --skeleton-shine: rgba(148, 180, 210, 0.12);
+  --skeleton-base: rgba(255, 255, 255, 0.08);
+  --skeleton-shine: rgba(255, 255, 255, 0.2);
 
-  /* ─── Board ─── */
-  --board-accent: rgba(124, 184, 207, 0.4);
+  --board-accent: rgba(255, 196, 117, 0.56);
 }
