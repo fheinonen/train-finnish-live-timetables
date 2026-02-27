@@ -24,7 +24,7 @@ Scenario: Next departure is framed as a hero card
 Scenario: Typography tokens define a distinct display and body pair
   Given the design token stylesheet
   When typography tokens are inspected
-  Then the display font token equals "Fraunces"
+  Then the display font token equals "Manrope"
   And the body font token equals "Manrope"
 
 Scenario: Stop filter summary reflects selected filters

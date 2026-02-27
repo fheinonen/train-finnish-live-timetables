@@ -105,7 +105,7 @@
 
 .next-mins {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: var(--text-4xl);
   line-height: var(--leading-none);
   color: var(--text);
@@ -264,7 +264,7 @@ li {
 
 .remaining {
   display: inline;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 1.18rem;
   line-height: var(--leading-none);
 }

@@ -25,7 +25,7 @@
   --text-4xl: clamp(2rem, 6.5vw, 3rem);
   --text-5xl: clamp(2.4rem, 7.6vw, 3.8rem);
 
-  --font-display: "Fraunces", "Times New Roman", serif;
+  --font-display: "Manrope", "Trebuchet MS", sans-serif;
   --font-body: "Manrope", "Trebuchet MS", sans-serif;
   --font-mono: "IBM Plex Mono", "Courier New", monospace;
   --font-sans: var(--font-body);
