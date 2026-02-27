@@ -98,7 +98,7 @@
 
 .next-grid {
   display: grid;
-  grid-template-columns: minmax(var(--badge-size), auto) minmax(0, 1fr);
+  grid-template-columns: var(--badge-size) minmax(0, 1fr);
   align-items: center;
   gap: var(--space-4);
 }
@@ -169,7 +169,7 @@ li {
   background: rgba(255, 255, 255, 0.02);
   border-radius: var(--radius-sm);
   display: grid;
-  grid-template-columns: minmax(var(--badge-size), auto) 1fr auto;
+  grid-template-columns: var(--badge-size) 1fr auto;
   align-items: center;
   gap: var(--space-3);
   --i: 0;
