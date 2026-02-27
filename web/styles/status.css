@@ -57,20 +57,39 @@
   font-family: var(--font-mono);
 }
 
+.location-prompt,
 .permission {
   padding: var(--space-8);
-  border-left: 3px solid var(--amber);
-  background: linear-gradient(160deg, rgba(241, 191, 111, 0.14), rgba(241, 191, 111, 0.06));
+  border-left: 3px solid var(--cyan);
+  text-align: center;
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
 }
 
+.location-prompt-icon {
+  color: var(--cyan);
+  opacity: 0.7;
+}
+
+.location-prompt h2,
 .permission h2 {
-  color: var(--amber);
   font-size: 1.25rem;
+  color: var(--text);
+  margin: 0;
 }
 
+.location-prompt .muted,
 .permission .muted {
   color: var(--text-secondary);
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  max-width: 34ch;
+}
+
+.location-prompt button,
+.permission button {
   margin-top: var(--space-2);
-  font-size: var(--text-lg);
-  line-height: var(--leading-loose);
+  min-width: 180px;
 }

@@ -175,12 +175,35 @@
         </section>
       </section>
 
-      <section id="permissionCard" class="permission card hidden">
-        <h2>Location Permission Required</h2>
+      <section id="locationPromptCard" class="location-prompt card hidden">
+        <div class="location-prompt-icon" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <h2>Find nearby departures</h2>
         <p class="muted">
-          This app needs location access to show departures from your nearest station.
-          Enable location permission in your browser settings and tap Refresh Location.
+          We use your location to show real-time departures from stops near you.
+          Nothing is stored or shared.
         </p>
+        <button id="locationPromptAllow" type="button">Allow Location</button>
+      </section>
+
+      <section id="permissionCard" class="permission card hidden">
+        <div class="location-prompt-icon" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <h2>Location access needed</h2>
+        <p class="muted">
+          Location permission was blocked. To see nearby departures,
+          enable location access in your browser settings, then tap below.
+        </p>
+        <button id="permissionRetryBtn" type="button">Try Again</button>
       </section>
     </main>
 

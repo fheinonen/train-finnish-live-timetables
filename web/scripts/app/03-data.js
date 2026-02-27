@@ -696,6 +696,8 @@
           lat: pos.coords.latitude,
           lon: pos.coords.longitude,
         };
+        state.locationGranted = true;
+        api.setStorageItem("location:granted", "1");
         api.setPermissionRequired(false);
         api.setLoading(false);
         load(state.currentCoords.lat, state.currentCoords.lon);

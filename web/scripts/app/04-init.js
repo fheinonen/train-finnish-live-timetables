@@ -206,11 +206,31 @@
     }
   });
 
+  /* ─── Location Pre-Prompt ─── */
+  dom.locationPromptAllowEl?.addEventListener("click", () => {
+    api.hideLocationPrompt();
+    api.requestLocationAndLoad();
+  });
+
+  dom.permissionRetryBtnEl?.addEventListener("click", () => {
+    api.trackFirstManualInteraction("permission_retry_click");
+    api.requestLocationAndLoad();
+  });
+
   api.hydrateInitialState();
   api.applyModeUiState();
   api.updateClock();
   setInterval(api.updateClock, 1000);
-  api.requestLocationAndLoad();
+
+  /* Show pre-prompt if location was never granted, otherwise request directly */
+  const previouslyGranted = api.getStorageItem("location:granted") === "1";
+  if (previouslyGranted) {
+    api.requestLocationAndLoad();
+  } else {
+    api.showLocationPrompt();
+    api.setStatus("Tap Allow Location to get started.");
+  }
+
   setInterval(api.refreshDeparturesOnly, 30000);
 
   window.addEventListener("error", (event) => {

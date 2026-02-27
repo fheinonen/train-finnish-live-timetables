@@ -37,7 +37,10 @@
     voiceLocationChoicesCancelEl: document.getElementById("voiceLocationChoicesCancel"),
     dataScopeEl: document.getElementById("dataScope"),
     resultEl: document.getElementById("result"),
+    locationPromptCardEl: document.getElementById("locationPromptCard"),
+    locationPromptAllowEl: document.getElementById("locationPromptAllow"),
     permissionCardEl: document.getElementById("permissionCard"),
+    permissionRetryBtnEl: document.getElementById("permissionRetryBtn"),
     stationTitleEl: document.getElementById("stationTitle"),
     stationMetaEl: document.getElementById("stationMeta"),
     departuresEl: document.getElementById("departures"),
@@ -82,6 +85,7 @@
   const { MODE_RAIL, MODE_TRAM, MODE_METRO, MODE_BUS } = app.constants;
 
   app.state = {
+    locationGranted: false,
     isLoading: false,
     isVoiceListening: false,
     currentCoords: null,
@@ -193,7 +197,17 @@
     dom.resolvedLocationEl.classList.remove("hidden");
   }
 
+  function showLocationPrompt() {
+    if (dom.locationPromptCardEl) dom.locationPromptCardEl.classList.remove("hidden");
+    if (dom.permissionCardEl) dom.permissionCardEl.classList.add("hidden");
+  }
+
+  function hideLocationPrompt() {
+    if (dom.locationPromptCardEl) dom.locationPromptCardEl.classList.add("hidden");
+  }
+
   function setPermissionRequired(required) {
+    hideLocationPrompt();
     if (!dom.permissionCardEl) return;
     dom.permissionCardEl.classList.toggle("hidden", !required);
   }
@@ -590,6 +604,8 @@
     setVoiceListening,
     setStatus,
     setResolvedLocationHint,
+    showLocationPrompt,
+    hideLocationPrompt,
     setPermissionRequired,
     setLastUpdated,
     getStorageItem,
