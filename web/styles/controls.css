@@ -221,7 +221,9 @@
 }
 
 .custom-select-list li {
-  display: block;
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-target-min);
   padding: var(--space-2) var(--space-4);
   font-size: var(--text-base);
   color: var(--text-secondary);
@@ -246,11 +248,14 @@
 }
 
 .chip-toggle {
+  min-height: var(--tap-target-min);
+  display: inline-flex;
+  align-items: center;
   border: 1px solid var(--interactive-border);
   background: rgba(134, 179, 191, 0.06);
   color: var(--text-secondary);
   border-radius: var(--radius-pill);
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-3);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   font-family: var(--font-body);
@@ -285,6 +290,7 @@
 }
 
 button {
+  min-height: var(--tap-target-min);
   border: 1px solid var(--interactive-border);
   background: var(--interactive-bg);
   color: var(--interactive-text);

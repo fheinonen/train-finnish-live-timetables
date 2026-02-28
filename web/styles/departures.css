@@ -153,7 +153,7 @@
 
 .next-filter-pill {
   margin: 0;
-  min-height: 44px;
+  min-height: var(--tap-target-min);
   width: 100%;
   border-radius: var(--radius-track);
   border: 1px solid var(--border);
@@ -191,6 +191,8 @@
 }
 
 .result-filter-trigger {
+  background: var(--interactive-bg);
+  border: 1px solid var(--interactive-border);
   cursor: pointer;
   touch-action: manipulation;
   transition: transform var(--duration-fast) var(--ease-default),
@@ -312,7 +314,7 @@ li {
 .destination.result-filter-trigger {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: var(--tap-target-min);
   padding: 0 var(--space-3);
   border-radius: var(--radius-track);
   width: 100%;
@@ -337,7 +339,7 @@ li {
 .track.result-filter-trigger {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: var(--tap-target-min);
   padding-top: 0;
   padding-bottom: 0;
   padding-left: var(--space-3);
@@ -355,7 +357,7 @@ li {
 #nextDestination.result-filter-trigger {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: var(--tap-target-min);
   padding: 0 var(--space-4);
   border-radius: var(--radius-track);
 }
@@ -363,7 +365,7 @@ li {
 #nextTrack.result-filter-trigger {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: var(--tap-target-min);
   width: 100%;
   justify-content: flex-start;
   padding: 0 var(--space-4);

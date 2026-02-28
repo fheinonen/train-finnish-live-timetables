@@ -109,6 +109,7 @@
   --radius-pill: 999px;
   --radius-track: 10px;
 
+  --tap-target-min: 48px;
   --badge-size: 52px;
   --page-max-width: 760px;
   --theme-toggle-size: 34px;

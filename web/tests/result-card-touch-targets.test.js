@@ -11,8 +11,8 @@ Scenario: Destination and stop taps have separated hit targets
   Given the departures stylesheet
   When result card touch target styles are inspected
   Then train rows use "var(--space-3)" vertical spacing between destination and stop
-  And destination filter trigger has minimum hit height "44px"
-  And stop filter trigger has minimum hit height "44px"
+  And destination filter trigger has minimum hit height "var(--tap-target-min)"
+  And stop filter trigger has minimum hit height "var(--tap-target-min)"
 
 Scenario: Hero card exposes dedicated filter rail targets
   Given the departures stylesheet
@@ -20,8 +20,8 @@ Scenario: Hero card exposes dedicated filter rail targets
   When hero card filter rail styles are inspected
   Then hero card filter rail exists
   And hero card filter rail gap equals "var(--space-3)"
-  And hero destination filter trigger has minimum hit height "44px"
-  And hero stop filter trigger has minimum hit height "44px"
+  And hero destination filter trigger has minimum hit height "var(--tap-target-min)"
+  And hero stop filter trigger has minimum hit height "var(--tap-target-min)"
   And hero stop filter trigger width equals "100%"
 
 Scenario: Active destination filter is visually prominent
