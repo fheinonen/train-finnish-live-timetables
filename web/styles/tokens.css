@@ -86,6 +86,14 @@
   --interactive-active-border: rgba(241, 191, 111, 0.45);
   --interactive-active-text: #ffe6bc;
 
+  --segment-track-bg: rgba(44, 56, 75, 0.88);
+  --segment-divider: rgba(214, 225, 234, 0.18);
+  --segment-active-bg: linear-gradient(180deg, rgba(30, 42, 60, 0.98), rgba(24, 35, 52, 0.98));
+  --segment-active-border: rgba(241, 191, 111, 0.58);
+  --segment-active-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 3px 10px rgba(0, 0, 0, 0.26);
+  --segment-inactive-text: rgba(235, 242, 247, 0.56);
+  --segment-active-text: #f8fbfe;
+
   --departure-now-bg: linear-gradient(140deg, rgba(241, 191, 111, 0.24), rgba(241, 191, 111, 0.1));
   --departure-now-border: rgba(241, 191, 111, 0.45);
   --departure-now-accent: #f9c574;

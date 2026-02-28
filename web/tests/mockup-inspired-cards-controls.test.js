@@ -79,6 +79,8 @@ Scenario: Transit mode selector matches mockup segmented style
   Then all transport modes are shown inside one rounded segmented control
   And the active mode is rendered as a filled highlighted segment
   And inactive modes are visually separated with subtle dividers
+  And the segmented track uses the mockup slate tone
+  And the active segment uses mockup border and shadow treatment
 `;
 
 function getRuleBody(css, selector) {
@@ -787,7 +789,10 @@ defineFeature(test, featureText, {
         world.modeSelectorChecks = {
           hasAllModesInOneControl: segmentControlPattern.test(world.html),
           controlRadius: getDeclarationValue(segmentControlRule, "border-radius"),
+          controlBackground: getDeclarationValue(segmentControlRule, "background"),
           activeSegmentBackground: getDeclarationValue(activeSegmentRule, "background"),
+          activeSegmentBorder: getDeclarationValue(activeSegmentRule, "border"),
+          activeSegmentShadow: getDeclarationValue(activeSegmentRule, "box-shadow"),
           hasDividerBorder: getDeclarationValue(dividerRule, "border-left"),
         };
       },
@@ -808,10 +813,21 @@ defineFeature(test, featureText, {
     {
       pattern: /^Then inactive modes are visually separated with subtle dividers$/,
       run: ({ assert, world }) => {
-        assert.equal(
-          world.modeSelectorChecks.hasDividerBorder,
-          "1px solid color-mix(in srgb, var(--interactive-border) 72%, transparent)"
-        );
+        assert.equal(world.modeSelectorChecks.hasDividerBorder, "1px solid var(--segment-divider)");
+      },
+    },
+    {
+      pattern: /^Then the segmented track uses the mockup slate tone$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.modeSelectorChecks.controlBackground, "var(--segment-track-bg)");
+      },
+    },
+    {
+      pattern: /^Then the active segment uses mockup border and shadow treatment$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.modeSelectorChecks.activeSegmentBackground, "var(--segment-active-bg)");
+        assert.equal(world.modeSelectorChecks.activeSegmentBorder, "1px solid var(--segment-active-border)");
+        assert.equal(world.modeSelectorChecks.activeSegmentShadow, "var(--segment-active-shadow)");
       },
     },
   ],

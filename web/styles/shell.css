@@ -125,7 +125,7 @@ h2 {
   position: relative;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+  background: var(--segment-track-bg);
   border: 1px solid var(--interactive-border);
   border-radius: var(--radius-pill);
   padding: 3px;
@@ -142,7 +142,7 @@ h2 {
   border: none;
   border-radius: 0;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--segment-inactive-text);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   font-family: var(--font-body);
@@ -152,11 +152,11 @@ h2 {
 }
 
 .segment + .segment {
-  border-left: 1px solid color-mix(in srgb, var(--interactive-border) 72%, transparent);
+  border-left: 1px solid var(--segment-divider);
 }
 
 .segment:hover {
-  color: var(--text);
+  color: color-mix(in srgb, var(--segment-active-text) 86%, transparent);
 }
 
 .segment:focus-visible {
@@ -166,8 +166,8 @@ h2 {
 }
 
 .segment.is-active {
-  color: var(--text);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.16);
+  color: var(--segment-active-text);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.24);
 }
 
 .segment-indicator {
@@ -177,13 +177,9 @@ h2 {
   left: 3px;
   width: calc((100% - 6px) / 4);
   border-radius: var(--radius-pill);
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--interactive-active-bg) 92%, transparent),
-    color-mix(in srgb, var(--interactive-active-bg) 58%, transparent)
-  );
-  border: 1px solid var(--interactive-active-border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: var(--segment-active-bg);
+  border: 1px solid var(--segment-active-border);
+  box-shadow: var(--segment-active-shadow);
   transform: translateX(calc(var(--active-index) * 100%));
   transition: transform var(--duration-medium) var(--ease-out);
   will-change: transform;
