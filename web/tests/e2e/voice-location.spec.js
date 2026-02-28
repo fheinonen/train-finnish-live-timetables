@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { defineFeature } = require("../helpers/playwright-bdd");
 
 function nextIso(minutesFromNow) {
   return new Date(Date.now() + minutesFromNow * 60_000).toISOString();
@@ -119,14 +120,17 @@ async function installApiMocks(page) {
 }
 
 async function installPromptMock(page, responses) {
-  await page.addInitScript(({ scriptedResponses }) => {
-    const queue = Array.isArray(scriptedResponses) ? [...scriptedResponses] : [];
-    window.__promptCalls = [];
-    window.prompt = (message, defaultValue) => {
-      window.__promptCalls.push({ message, defaultValue });
-      return queue.length > 0 ? queue.shift() : null;
-    };
-  }, { scriptedResponses: responses });
+  await page.addInitScript(
+    ({ scriptedResponses }) => {
+      const queue = Array.isArray(scriptedResponses) ? [...scriptedResponses] : [];
+      window.__promptCalls = [];
+      window.prompt = (message, defaultValue) => {
+        window.__promptCalls.push({ message, defaultValue });
+        return queue.length > 0 ? queue.shift() : null;
+      };
+    },
+    { scriptedResponses: responses }
+  );
 }
 
 async function installSpeechRecognitionMock(page, scenario) {
@@ -210,63 +214,115 @@ async function installSpeechRecognitionMock(page, scenario) {
   }, scenario);
 }
 
-test("falls back to typed query when voice recognition is unsupported", async ({ page }) => {
-  await installPromptMock(page, ["Kamppi Helsinki"]);
-  await installSpeechRecognitionMock(page, "unsupported");
-  const calls = await installApiMocks(page);
+const featureText = `
+Feature: Voice location
 
-  await page.goto("/");
-  await expect(page.locator("#voiceLocateBtn")).toBeEnabled();
+Scenario: Fall back to typed query when speech recognition is unsupported
+  Given prompt responses are "Kamppi Helsinki"
+  And speech recognition scenario is "unsupported"
+  And API mocks are installed
+  When the user triggers voice location
+  Then geocode request count equals 1
+  And resolved location text contains "Resolved location: Kamppi, Helsinki"
+  And prompt dialog was shown
+  And first geocode query text equals "Kamppi Helsinki"
 
-  await page.locator("#voiceLocateBtn").click();
+Scenario: Show clear status when microphone permission is denied
+  Given prompt responses are ""
+  And speech recognition scenario is "error:not-allowed"
+  And API mocks are installed
+  When the user triggers voice location
+  Then status text equals "Microphone permission denied."
+  And geocode request count equals 0
 
-  await expect.poll(() => calls.geocode.length).toBe(1);
-  await expect(page.locator("#resolvedLocation")).toContainText("Resolved location: Kamppi, Helsinki");
+Scenario: Show clear status when no microphone is available
+  Given prompt responses are ""
+  And speech recognition scenario is "error:audio-capture"
+  And API mocks are installed
+  When the user triggers voice location
+  Then status text equals "No microphone was found for voice location."
+  And geocode request count equals 0
 
-  const promptCalls = await page.evaluate(() => window.__promptCalls.length);
-  expect(promptCalls).toBeGreaterThan(0);
+Scenario: Use speech transcript when recognition succeeds
+  Given prompt responses are ""
+  And speech recognition scenario is "success"
+  And API mocks are installed
+  When the user triggers voice location
+  Then geocode request count equals 1
+  And resolved location text contains "Kamppi Helsinki"
+`;
 
-  expect(calls.geocode[0].text).toBe("Kamppi Helsinki");
-});
-
-test("shows a clear status when microphone permission is denied", async ({ page }) => {
-  await installPromptMock(page, []);
-  await installSpeechRecognitionMock(page, "error:not-allowed");
-  const calls = await installApiMocks(page);
-
-  await page.goto("/");
-  await expect(page.locator("#voiceLocateBtn")).toBeEnabled();
-
-  await page.locator("#voiceLocateBtn").click();
-
-  await expect(page.locator("#status")).toHaveText("Microphone permission denied.");
-  expect(calls.geocode.length).toBe(0);
-});
-
-test("shows a clear status when no microphone is available", async ({ page }) => {
-  await installPromptMock(page, []);
-  await installSpeechRecognitionMock(page, "error:audio-capture");
-  const calls = await installApiMocks(page);
-
-  await page.goto("/");
-  await expect(page.locator("#voiceLocateBtn")).toBeEnabled();
-
-  await page.locator("#voiceLocateBtn").click();
-
-  await expect(page.locator("#status")).toHaveText("No microphone was found for voice location.");
-  expect(calls.geocode.length).toBe(0);
-});
-
-test("uses speech transcript when recognition succeeds", async ({ page }) => {
-  await installPromptMock(page, []);
-  await installSpeechRecognitionMock(page, "success");
-  const calls = await installApiMocks(page);
-
-  await page.goto("/");
-  await expect(page.locator("#voiceLocateBtn")).toBeEnabled();
-
-  await page.locator("#voiceLocateBtn").click();
-
-  await expect.poll(() => calls.geocode.length).toBe(1);
-  await expect(page.locator("#resolvedLocation")).toContainText("from \"Kamppi Helsinki\"");
+defineFeature(test, featureText, {
+  failFirstProbe: true,
+  createWorld: ({ fixtures }) => ({
+    page: fixtures.page,
+    calls: null,
+  }),
+  stepDefinitions: [
+    {
+      pattern: /^Given prompt responses are "([^"]*)"$/,
+      run: async ({ args, world }) => {
+        const responses = args[0]
+          .split("|")
+          .map((value) => value.trim())
+          .filter(Boolean);
+        await installPromptMock(world.page, responses);
+      },
+    },
+    {
+      pattern: /^Given speech recognition scenario is "([^"]*)"$/,
+      run: async ({ args, world }) => {
+        await installSpeechRecognitionMock(world.page, args[0]);
+      },
+    },
+    {
+      pattern: /^Given API mocks are installed$/,
+      run: async ({ world }) => {
+        world.calls = await installApiMocks(world.page);
+      },
+    },
+    {
+      pattern: /^When the user triggers voice location$/,
+      run: async ({ world }) => {
+        await world.page.goto("/");
+        await expect(world.page.locator("#voiceLocateBtn")).toBeEnabled();
+        await world.page.locator("#voiceLocateBtn").click();
+      },
+    },
+    {
+      pattern: /^Then geocode request count equals (\d+)$/,
+      run: async ({ assert, args, world }) => {
+        const expectedCount = Number(args[0]);
+        if (expectedCount > 0) {
+          await expect.poll(() => world.calls.geocode.length).toBe(expectedCount);
+        }
+        assert.equal(world.calls.geocode.length, expectedCount);
+      },
+    },
+    {
+      pattern: /^Then resolved location text contains "(.+)"$/,
+      run: async ({ args, world }) => {
+        await expect(world.page.locator("#resolvedLocation")).toContainText(args[0]);
+      },
+    },
+    {
+      pattern: /^Then prompt dialog was shown$/,
+      run: async ({ assert, world }) => {
+        const promptCalls = await world.page.evaluate(() => window.__promptCalls.length);
+        assert.ok(promptCalls > 0);
+      },
+    },
+    {
+      pattern: /^Then first geocode query text equals "([^"]*)"$/,
+      run: async ({ assert, args, world }) => {
+        assert.equal(world.calls.geocode[0]?.text, args[0]);
+      },
+    },
+    {
+      pattern: /^Then status text equals "([^"]*)"$/,
+      run: async ({ args, world }) => {
+        await expect(world.page.locator("#status")).toHaveText(args[0]);
+      },
+    },
+  ],
 });

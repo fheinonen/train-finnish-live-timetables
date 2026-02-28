@@ -82,7 +82,8 @@ defineFeature(test, featureText, {
     {
       pattern: /^Given a pickup type value of "([^"]*)"$/,
       run: ({ args, world }) => {
-        world.input.pickupType = args[0];
+        world.input.pickupType = String(args[0] || "");
+        world.input.givenPickupPreview = departuresUtils.normalizePickDropType(world.input.pickupType);
       },
     },
     {
@@ -101,6 +102,7 @@ defineFeature(test, featureText, {
       pattern: /^Given a stop time pickup type value of "([^"]*)"$/,
       run: ({ args, world }) => {
         world.input.stopTime = { pickupType: args[0] };
+        world.input.givenBoardabilityPreview = departuresUtils.isBoardableStopTime(world.input.stopTime);
       },
     },
     {
