@@ -310,12 +310,15 @@
   function setStopControlsVisibility(visible) {
     if (!dom.busControlsEl) return;
     dom.busControlsEl.classList.toggle("hidden", !visible);
+    dom.busStopSelectWrapEl?.classList?.toggle?.("hidden", !visible);
+    dom.stationTitleEl?.classList?.toggle?.("hidden", visible);
     if (!visible) {
       clearStopFilterAutoCloseTimer();
       state.stopFiltersPanelOpen = false;
       state.stopFiltersPanelLockUntilMs = 0;
       clearStopFilterAttention();
       dom.busStopSelectEl?.classList?.remove?.("is-active-filter");
+      toggleStopDropdown(false);
     }
     syncStopFiltersPanelUi();
   }
@@ -667,9 +670,7 @@
 
     if (dom.busStopSelectLabelEl) {
       const stop = state.busStops.find((s) => s.id === stopId);
-      dom.busStopSelectLabelEl.textContent = stop
-        ? `${stop.name} (${stop.distanceMeters}m)`
-        : stopId;
+      dom.busStopSelectLabelEl.textContent = stop ? stop.name : stopId;
     }
 
     refreshAfterStopContextChange({
@@ -741,7 +742,7 @@
     if (dom.busStopSelectLabelEl) {
       const activeStop = getStopMeta(state.busStopId);
       dom.busStopSelectLabelEl.textContent = activeStop
-        ? `${activeStop.name} (${activeStop.distanceMeters}m)`
+        ? activeStop.name
         : "Nearest stop";
     }
 
@@ -919,7 +920,7 @@
         if (dom.busStopSelectLabelEl) {
           const selectedStop = state.busStops.find((s) => s.id === selectedId);
           dom.busStopSelectLabelEl.textContent = selectedStop
-            ? `${selectedStop.name} (${selectedStop.distanceMeters}m)`
+            ? selectedStop.name
             : "Select stop";
         }
       }
@@ -1140,17 +1141,8 @@
       return;
     }
 
-    updateNextSummary(visibleDepartures[0], station);
-    const listDepartures = visibleDepartures.slice(1);
-
-    if (listDepartures.length === 0) {
-      const li = document.createElement("li");
-      li.className = "empty-row";
-      li.textContent =
-        `No additional upcoming ${getStopModeLabel().plural} right now.`;
-      dom.departuresEl.appendChild(li);
-      return;
-    }
+    updateNextSummary(null);
+    const listDepartures = visibleDepartures;
 
     for (let i = 0; i < listDepartures.length; i++) {
       const item = listDepartures[i];

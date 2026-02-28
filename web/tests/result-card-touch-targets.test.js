@@ -14,16 +14,6 @@ Scenario: Destination and stop taps have separated hit targets
   And destination filter trigger has minimum hit height "var(--tap-target-min)"
   And stop filter trigger has minimum hit height "var(--tap-target-min)"
 
-Scenario: Hero card exposes dedicated filter rail targets
-  Given the departures stylesheet
-  And the app shell markup
-  When hero card filter rail styles are inspected
-  Then hero card filter rail exists
-  And hero card filter rail gap equals "var(--space-3)"
-  And hero destination filter trigger has minimum hit height "var(--tap-target-min)"
-  And hero stop filter trigger has minimum hit height "var(--tap-target-min)"
-  And hero stop filter trigger width equals "100%"
-
 Scenario: Active destination filter is visually prominent
   Given the departures stylesheet
   When active destination filter styles are inspected
@@ -38,12 +28,6 @@ Scenario: Active stop filter matches destination active styling
   And active stop filter border equals "1px solid var(--interactive-active-border)"
   And active stop filter text color equals "var(--interactive-active-text)"
   And active stop filter text weight equals "var(--weight-bold)"
-
-Scenario: Active hero filter pill exposes clear affordance
-  Given the departures stylesheet
-  When active hero filter pill styles are inspected
-  Then active hero clear affordance content equals "×"
-  And active hero clear affordance size equals "22px"
 `;
 
 function getRuleBody(css, selector) {
@@ -61,15 +45,9 @@ function getDeclarationValue(block, propertyName) {
 defineFeature(test, featureText, {
   createWorld: () => ({
     css: "",
-    html: "",
     trainGap: null,
     destinationHitHeight: null,
     stopHitHeight: null,
-    hasHeroFilterRail: false,
-    heroRailGap: null,
-    heroDestinationHitHeight: null,
-    heroStopHitHeight: null,
-    heroStopWidth: null,
     activeDestinationBackground: null,
     activeDestinationBorder: null,
     activeDestinationWeight: null,
@@ -77,20 +55,12 @@ defineFeature(test, featureText, {
     activeStopBorder: null,
     activeStopColor: null,
     activeStopWeight: null,
-    activeHeroClearContent: null,
-    activeHeroClearSize: null,
   }),
   stepDefinitions: [
     {
       pattern: /^Given the departures stylesheet$/,
       run: ({ world }) => {
         world.css = fs.readFileSync(path.resolve(__dirname, "../styles/departures.css"), "utf8");
-      },
-    },
-    {
-      pattern: /^Given the app shell markup$/,
-      run: ({ world }) => {
-        world.html = fs.readFileSync(path.resolve(__dirname, "../index.html"), "utf8");
       },
     },
     {
@@ -125,34 +95,6 @@ defineFeature(test, featureText, {
       },
     },
     {
-      pattern: /^When active hero filter pill styles are inspected$/,
-      run: ({ world }) => {
-        const activeHeroClearRule = getRuleBody(
-          world.css,
-          ".next-filter-pill.result-filter-trigger.is-active::after"
-        );
-        world.activeHeroClearContent = String(
-          getDeclarationValue(activeHeroClearRule, "content") || ""
-        ).replaceAll("\"", "");
-        world.activeHeroClearSize = getDeclarationValue(activeHeroClearRule, "width");
-      },
-    },
-    {
-      pattern: /^When hero card filter rail styles are inspected$/,
-      run: ({ world }) => {
-        const heroRailRule = getRuleBody(world.css, ".next-filter-rail");
-        const heroDestinationRule = getRuleBody(world.css, "#nextDestination.result-filter-trigger");
-        const heroStopRule = getRuleBody(world.css, "#nextTrack.result-filter-trigger");
-
-        world.hasHeroFilterRail = /id="nextSummary"[\s\S]*class="[^"]*next-hero[^"]*"/.test(world.html) &&
-          /class="next-filter-rail"/.test(world.html);
-        world.heroRailGap = getDeclarationValue(heroRailRule, "gap");
-        world.heroDestinationHitHeight = getDeclarationValue(heroDestinationRule, "min-height");
-        world.heroStopHitHeight = getDeclarationValue(heroStopRule, "min-height");
-        world.heroStopWidth = getDeclarationValue(heroStopRule, "width");
-      },
-    },
-    {
       pattern: /^Then train rows use "([^"]*)" vertical spacing between destination and stop$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.trainGap, args[0]);
@@ -168,36 +110,6 @@ defineFeature(test, featureText, {
       pattern: /^Then stop filter trigger has minimum hit height "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.stopHitHeight, args[0]);
-      },
-    },
-    {
-      pattern: /^Then hero card filter rail exists$/,
-      run: ({ assert, world }) => {
-        assert.equal(world.hasHeroFilterRail, true);
-      },
-    },
-    {
-      pattern: /^Then hero card filter rail gap equals "([^"]*)"$/,
-      run: ({ assert, args, world }) => {
-        assert.equal(world.heroRailGap, args[0]);
-      },
-    },
-    {
-      pattern: /^Then hero destination filter trigger has minimum hit height "([^"]*)"$/,
-      run: ({ assert, args, world }) => {
-        assert.equal(world.heroDestinationHitHeight, args[0]);
-      },
-    },
-    {
-      pattern: /^Then hero stop filter trigger has minimum hit height "([^"]*)"$/,
-      run: ({ assert, args, world }) => {
-        assert.equal(world.heroStopHitHeight, args[0]);
-      },
-    },
-    {
-      pattern: /^Then hero stop filter trigger width equals "([^"]*)"$/,
-      run: ({ assert, args, world }) => {
-        assert.equal(world.heroStopWidth, args[0]);
       },
     },
     {
@@ -240,18 +152,6 @@ defineFeature(test, featureText, {
       pattern: /^Then active stop filter text weight equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.activeStopWeight, args[0]);
-      },
-    },
-    {
-      pattern: /^Then active hero clear affordance content equals "([^"]*)"$/,
-      run: ({ assert, args, world }) => {
-        assert.equal(world.activeHeroClearContent, args[0]);
-      },
-    },
-    {
-      pattern: /^Then active hero clear affordance size equals "([^"]*)"$/,
-      run: ({ assert, args, world }) => {
-        assert.equal(world.activeHeroClearSize, args[0]);
       },
     },
   ],

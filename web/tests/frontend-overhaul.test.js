@@ -16,12 +16,11 @@ Scenario: Stop mode filters use progressive disclosure
   And the stop filter summary says "No filters"
   And the stop filter category label says "Stops"
 
-Scenario: Next departure is framed as a hero card
+Scenario: Departures list is rendered without hero summary
   Given the app shell markup
   When the departure presentation is inspected
-  Then the next departure card has a hero style hook
-  And the departures list appears after the next departure card
-  And the next label default text equals ""
+  Then no hero summary section exists
+  And departures list exists
 
 Scenario: Eyebrow label remains static across modes
   Given mode label UI targets are wired
@@ -38,6 +37,12 @@ Scenario: Last updated metadata is grouped with station header
   When station header metadata layout is inspected
   Then last updated metadata is placed in the station header block
   And status line is hidden by default
+
+Scenario: Stop selector is embedded in station header
+  Given the app shell markup
+  When stop selector layout is inspected
+  Then station header contains stop dropdown trigger
+  And stop controls do not include separate stop selector
 
 Scenario: Typography tokens define a distinct display and body pair
   Given the design token stylesheet
@@ -117,6 +122,8 @@ defineFeature(test, featureText, {
     boardSubtitleText: "",
     hasHeaderLastUpdated: false,
     statusHiddenByDefault: false,
+    hasHeaderStopDropdown: false,
+    hasToolbarStopDropdown: false,
     modeLabelApp: null,
     modeEyebrowText: "",
     typographyTokens: null,
@@ -173,32 +180,22 @@ defineFeature(test, featureText, {
       pattern: /^When the departure presentation is inspected$/,
       run: ({ world }) => {
         world.departureLayout = {
-          nextSummaryPosition: world.html.indexOf('id="nextSummary"'),
+          hasHeroSummary: /id="nextSummary"/.test(world.html),
           departuresPosition: world.html.indexOf('id="departures"'),
-          nextSummaryClass: /id="nextSummary"[^>]*class="([^"]*)"/.exec(world.html)?.[1] || "",
-          nextLabelText: /id="nextLabel"[^>]*>([^<]*)</.exec(world.html)?.[1]?.trim?.() || "",
         };
       },
     },
     {
-      pattern: /^Then the next departure card has a hero style hook$/,
+      pattern: /^Then no hero summary section exists$/,
       run: ({ assert, world }) => {
-        assert.match(world.departureLayout.nextSummaryClass, /next-hero/);
+        assert.equal(world.departureLayout.hasHeroSummary, false);
       },
     },
     {
-      pattern: /^Then the departures list appears after the next departure card$/,
+      pattern: /^Then departures list exists$/,
       run: ({ assert, world }) => {
-        const { nextSummaryPosition, departuresPosition } = world.departureLayout;
-        assert.ok(nextSummaryPosition >= 0, "Expected next summary section");
+        const { departuresPosition } = world.departureLayout;
         assert.ok(departuresPosition >= 0, "Expected departures list");
-        assert.ok(departuresPosition > nextSummaryPosition, "Expected departures list after next summary");
-      },
-    },
-    {
-      pattern: /^Then the next label default text equals "([^"]*)"$/,
-      run: ({ assert, args, world }) => {
-        assert.equal(world.departureLayout.nextLabelText, args[0]);
       },
     },
     {
@@ -257,6 +254,30 @@ defineFeature(test, featureText, {
       pattern: /^Then status line is hidden by default$/,
       run: ({ assert, world }) => {
         assert.equal(world.statusHiddenByDefault, true);
+      },
+    },
+    {
+      pattern: /^When stop selector layout is inspected$/,
+      run: ({ world }) => {
+        world.hasHeaderStopDropdown = /<div class="result-head">[\s\S]*id="busStopSelectWrap"[\s\S]*id="busStopSelect"[\s\S]*<\/div>[\s\S]*<div class="result-head-right">/.test(
+          world.html
+        );
+        const busControlsSection = /<section id="busControls"[\s\S]*?<\/section>/.exec(world.html)?.[0] || "";
+        world.hasToolbarStopDropdown =
+          /id="busStopSelectWrap"/.test(busControlsSection) &&
+          /id="busStopSelect"/.test(busControlsSection);
+      },
+    },
+    {
+      pattern: /^Then station header contains stop dropdown trigger$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.hasHeaderStopDropdown, true);
+      },
+    },
+    {
+      pattern: /^Then stop controls do not include separate stop selector$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.hasToolbarStopDropdown, false);
       },
     },
     {

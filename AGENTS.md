@@ -12,6 +12,12 @@
 - Use available linters.
 - Optimize code to minimize token count and reduce context window pressure.
 
+## Test Output
+- Test commands must print failed tests only.
+- Suppress passing test lines and success summaries.
+- For Node test runs, prefer failure-only output filtering, for example:
+  `node --test ... 2>&1 | rg -v '^(✔|ℹ tests|ℹ suites|ℹ pass|ℹ fail 0|ℹ cancelled|ℹ skipped|ℹ todo|ℹ duration_ms)'`
+
 ## Git Discipline
 - Check test coverage before commit.
 - Never push to git without asking first.
@@ -44,4 +50,3 @@ Primary production domain is aliased to:
 ## Version Control
 
 - Changes in this repository are committed with `jj` (Jujutsu).
-

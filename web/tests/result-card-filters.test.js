@@ -8,7 +8,7 @@ const { defineFeature } = require("./helpers/bdd");
 const featureText = `
 Feature: Result cards can toggle stop mode filters
 
-Scenario: Tapping hero line toggles line filter on and off
+Scenario: Tapping result card line toggles line filter on and off
   Given stop mode departures with lines "550" and "560"
   When result card line "550" is toggled
   Then active line filters equal "550"
@@ -89,11 +89,6 @@ Scenario: Compact viewport keeps results visible by skipping panel auto-open
   Then stop filters panel is closed
   And filter pill feedback is visible
 
-Scenario: Empty hero line and destination are not interactive filters
-  Given stop mode departures with an empty hero line and destination
-  When the hero departure summary is rendered
-  Then hero line filter trigger is inactive
-  And hero destination filter trigger is inactive
 `;
 
 function createClassList(initialClasses = []) {
@@ -347,8 +342,6 @@ defineFeature(test, featureText, {
     stationForResolution: null,
     resolvedStopTarget: null,
     resolvedStopTargetDetails: null,
-    heroDeparture: null,
-    heroStation: null,
   }),
   stepDefinitions: [
     {
@@ -366,44 +359,12 @@ defineFeature(test, featureText, {
       },
     },
     {
-      pattern: /^Given stop mode departures with an empty hero line and destination$/,
-      run: ({ world }) => {
-        const departures = [
-          {
-            line: "",
-            destination: "",
-            departureIso: new Date(Date.now() + 120000).toISOString(),
-            stopId: "HSL:1001",
-            stopCode: "1001",
-            stopName: "Nearest",
-          },
-          {
-            line: "560",
-            destination: "Pasila",
-            departureIso: new Date(Date.now() + 240000).toISOString(),
-            stopId: "HSL:1001",
-            stopCode: "1001",
-            stopName: "Nearest",
-          },
-        ];
-        world.harness = createUiHarness({ departures });
-        world.heroDeparture = departures[0];
-        world.heroStation = world.harness.app.state.latestResponse.station;
-      },
-    },
-    {
       pattern: /^When result card line "([^"]*)" is toggled$/,
       run: ({ args, world }) => {
         world.harness.app.api.toggleLineFilterFromResultCard(args[0]);
         world.lastVisibleDepartures = world.harness.app.api.getVisibleDepartures(
           world.harness.app.state.latestResponse.station.departures
         );
-      },
-    },
-    {
-      pattern: /^When the hero departure summary is rendered$/,
-      run: ({ world }) => {
-        world.harness.app.api.updateNextSummary(world.heroDeparture, world.heroStation);
       },
     },
     {
@@ -445,24 +406,6 @@ defineFeature(test, featureText, {
         const toggleClass = world.harness.dom.stopFiltersToggleBtnEl.classList;
         assert.equal(summaryClass.contains("is-attention"), true);
         assert.equal(toggleClass.contains("is-attention"), true);
-      },
-    },
-    {
-      pattern: /^Then hero line filter trigger is inactive$/,
-      run: ({ assert, world }) => {
-        const { nextLineEl } = world.harness.dom;
-        assert.equal(nextLineEl.classList.contains("result-filter-trigger"), false);
-        assert.equal(nextLineEl.getAttribute("role"), null);
-        assert.equal(nextLineEl.onclick, null);
-      },
-    },
-    {
-      pattern: /^Then hero destination filter trigger is inactive$/,
-      run: ({ assert, world }) => {
-        const { nextDestinationEl } = world.harness.dom;
-        assert.equal(nextDestinationEl.classList.contains("result-filter-trigger"), false);
-        assert.equal(nextDestinationEl.getAttribute("role"), null);
-        assert.equal(nextDestinationEl.onclick, null);
       },
     },
     {

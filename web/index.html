@@ -80,23 +80,6 @@
 
         <section id="busControls" class="mb-4 grid gap-3 hidden" aria-label="Stop controls">
           <div class="stop-toolbar">
-            <div class="grid gap-2">
-              <span class="bus-label">Stop</span>
-              <div class="relative" id="busStopSelectWrap">
-                <button
-                  type="button"
-                  id="busStopSelect"
-                  class="custom-select-trigger"
-                  role="combobox"
-                  aria-expanded="false"
-                  aria-haspopup="listbox"
-                >
-                  <span id="busStopSelectLabel">Select stop</span>
-                  <svg class="custom-select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </button>
-                <ul id="busStopSelectList" class="custom-select-list hidden" role="listbox"></ul>
-              </div>
-            </div>
             <button
               id="stopFiltersToggleBtn"
               class="secondary stop-filters-toggle"
@@ -144,6 +127,21 @@
           <div class="result-head">
             <div class="result-head-meta">
               <h2 id="stationTitle"></h2>
+              <div class="relative station-stop-select-wrap hidden" id="busStopSelectWrap">
+                <button
+                  type="button"
+                  id="busStopSelect"
+                  class="station-stop-select"
+                  role="combobox"
+                  aria-expanded="false"
+                  aria-haspopup="listbox"
+                  aria-label="Select stop"
+                >
+                  <span id="busStopSelectLabel">Select stop</span>
+                  <svg class="custom-select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <ul id="busStopSelectList" class="custom-select-list hidden" role="listbox"></ul>
+              </div>
               <p id="stationMeta" class="muted"></p>
               <p id="lastUpdated" class="last-updated">Last updated: -</p>
             </div>
@@ -158,17 +156,6 @@
                 <ul id="resultsLimitSelectList" class="custom-select-list hidden" role="listbox"></ul>
               </div>
               <span class="live-pill">Realtime</span>
-            </div>
-          </div>
-          <div id="nextSummary" class="next-summary next-hero hidden" aria-live="polite">
-            <p id="nextLabel" class="next-label"></p>
-            <div class="next-grid">
-              <span id="nextLine" class="letter-badge next-letter">-</span>
-              <p class="next-mins"><span id="nextMins">-</span></p>
-            </div>
-            <div class="next-filter-rail">
-              <p id="nextDestination" class="next-destination next-filter-pill">-</p>
-              <span id="nextTrack" class="next-chip next-filter-pill">Track -</span>
             </div>
           </div>
           <ul id="departures" class="mt-2 grid gap-2"></ul>

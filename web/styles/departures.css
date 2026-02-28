@@ -19,6 +19,56 @@
   min-width: 0;
 }
 
+.station-stop-select-wrap {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.station-stop-select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-3xl);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tighter);
+  max-width: 100%;
+}
+
+.station-stop-select:hover,
+.station-stop-select:active {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  transform: none;
+}
+
+.station-stop-select #busStopSelectLabel {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.station-stop-select .custom-select-chevron {
+  margin-top: 1px;
+}
+
+.station-stop-select.is-active-filter {
+  color: var(--interactive-active-text);
+}
+
+.station-stop-select-wrap .custom-select-list {
+  left: 0;
+  right: auto;
+  min-width: min(320px, calc(100vw - var(--space-8)));
+}
+
 .result-head-meta .last-updated {
   margin: 0;
 }
