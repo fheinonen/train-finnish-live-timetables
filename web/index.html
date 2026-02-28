@@ -165,15 +165,15 @@
             </div>
           </div>
           <div id="nextSummary" class="next-summary next-hero hidden" aria-live="polite">
-            <p id="nextLabel" class="next-label">Next Departure</p>
+            <p id="nextLabel" class="next-label"></p>
             <div class="next-grid">
               <span id="nextLine" class="letter-badge next-letter">-</span>
               <p class="next-mins"><span id="nextMins">-</span></p>
             </div>
-            <p id="nextDestination" class="next-destination">-</p>
-            <p class="mt-2">
-              <span id="nextTrack" class="next-chip">Track -</span>
-            </p>
+            <div class="next-filter-rail">
+              <p id="nextDestination" class="next-destination next-filter-pill">-</p>
+              <span id="nextTrack" class="next-chip next-filter-pill">Track -</span>
+            </div>
           </div>
           <ul id="departures" class="mt-2 grid gap-2"></ul>
         </section>

@@ -49,6 +49,7 @@ Scenario: Filters dropdown lists real stop ids with card stop code labels
   And filters panel stop labels equal "H1001,H2002"
   When filters panel stop id "HSL:2002" is toggled
   Then active member stop filter id equals "HSL:2002"
+  And active stop filter pill labels equal "H2002 x"
   And visible departures are filtered to stop id "HSL:2002"
   When data scope is refreshed from latest response
   Then data scope chips equal "Stop H2002"
@@ -673,6 +674,18 @@ defineFeature(test, featureText, {
       pattern: /^Then active member stop filter id equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(String(world.harness.app.state.busStopMemberFilterId || ""), args[0]);
+      },
+    },
+    {
+      pattern: /^Then active stop filter pill labels equal "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        world.harness.app.api.renderStopControls();
+        const expected = args[0].split(",").map((value) => value.trim()).filter(Boolean);
+        const actual = (world.harness.dom.busStopFiltersEl.children || [])
+          .filter((item) => item?.classList?.contains?.("is-active"))
+          .map((item) => String(item?.textContent || "").trim())
+          .filter(Boolean);
+        assert.deepEqual(actual, expected);
       },
     },
     {

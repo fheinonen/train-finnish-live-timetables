@@ -112,7 +112,7 @@
 
   function updateModeLabels() {
     const modeLabel = isStopMode() ? getStopModeLabel().title : "Rail";
-    const nextLabel = "Next";
+    const nextLabel = "";
 
     if (dom.modeEyebrowEl) {
       dom.modeEyebrowEl.textContent = `Helsinki Moves • ${modeLabel}`;
@@ -576,14 +576,17 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "chip-toggle";
-      if (activeSet.has(option.value)) {
+      const active = activeSet.has(option.value);
+      if (active) {
         button.classList.add("is-active");
         button.setAttribute("aria-pressed", "true");
       } else {
         button.setAttribute("aria-pressed", "false");
       }
 
-      button.textContent = `${option.value} (${option.count})`;
+      button.textContent = active
+        ? `${option.value} (${option.count}) x`
+        : `${option.value} (${option.count})`;
       button.addEventListener("click", () => onToggle(option.value));
       container.appendChild(button);
     }
@@ -654,14 +657,16 @@
       button.type = "button";
       button.className = "chip-toggle";
       button.dataset.value = option.id;
-      if (activeMemberStopId && option.id === activeMemberStopId) {
+      const active = Boolean(activeMemberStopId && option.id === activeMemberStopId);
+      if (active) {
         button.classList.add("is-active");
         button.setAttribute("aria-pressed", "true");
       } else {
         button.setAttribute("aria-pressed", "false");
       }
 
-      button.textContent = option.stopCode || option.id;
+      const stopLabel = option.stopCode || option.id;
+      button.textContent = active ? `${stopLabel} x` : stopLabel;
       button.addEventListener("click", () =>
         toggleStopFromResultCard(option.selectableStopId, option.id)
       );
@@ -1021,7 +1026,8 @@
     }
 
     const serviceName = isStopMode() ? getStopModeLabel().singular : "train";
-    return `Next ${serviceName} in ${formatMinutes(next.departureIso)}`;
+    const serviceLabel = serviceName.charAt(0).toUpperCase() + serviceName.slice(1);
+    return `${serviceLabel} in ${formatMinutes(next.departureIso)}`;
   }
 
   function getLoadErrorStatus(error) {

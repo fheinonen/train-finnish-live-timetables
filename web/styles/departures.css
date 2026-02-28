@@ -134,7 +134,8 @@
 }
 
 .next-chip {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: var(--space-1) var(--space-4);
   border-radius: var(--radius-track);
   font-size: var(--text-xs);
@@ -144,8 +145,26 @@
   font-family: var(--font-mono);
 }
 
+.next-filter-rail {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.next-filter-pill {
+  margin: 0;
+  min-height: 44px;
+  width: 100%;
+  border-radius: var(--radius-track);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0 var(--space-4);
+  box-sizing: border-box;
+}
+
 .next-destination {
-  margin: 8px 0 0;
+  display: inline-flex;
+  align-items: center;
   font-size: var(--text-lg);
   color: var(--text-secondary);
   line-height: var(--leading-normal);
@@ -153,6 +172,7 @@
 
 .result-filter-trigger {
   cursor: pointer;
+  touch-action: manipulation;
   transition: transform var(--duration-fast) var(--ease-default),
     box-shadow var(--duration-fast) var(--ease-default),
     border-color var(--duration-fast) var(--ease-default),
@@ -244,7 +264,7 @@ li {
 
 .train {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -272,8 +292,8 @@ li {
 .destination.result-filter-trigger {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: 4px var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-3);
   border-radius: var(--radius-track);
   width: 100%;
 }
@@ -297,9 +317,11 @@ li {
 .track.result-filter-trigger {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding-top: 6px;
-  padding-bottom: 6px;
+  min-height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
 }
 
 .track.result-filter-trigger.is-active {
@@ -313,15 +335,18 @@ li {
 #nextDestination.result-filter-trigger {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: 4px var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
   border-radius: var(--radius-track);
 }
 
 #nextTrack.result-filter-trigger {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 44px;
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0 var(--space-4);
 }
 
 #nextTrack.result-filter-trigger.is-active {

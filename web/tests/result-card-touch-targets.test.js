@@ -10,9 +10,19 @@ Feature: Result card touch target ergonomics
 Scenario: Destination and stop taps have separated hit targets
   Given the departures stylesheet
   When result card touch target styles are inspected
-  Then train rows use "var(--space-2)" vertical spacing between destination and stop
-  And destination filter trigger has minimum hit height "36px"
-  And stop filter trigger has minimum hit height "36px"
+  Then train rows use "var(--space-3)" vertical spacing between destination and stop
+  And destination filter trigger has minimum hit height "44px"
+  And stop filter trigger has minimum hit height "44px"
+
+Scenario: Hero card exposes dedicated filter rail targets
+  Given the departures stylesheet
+  And the app shell markup
+  When hero card filter rail styles are inspected
+  Then hero card filter rail exists
+  And hero card filter rail gap equals "var(--space-3)"
+  And hero destination filter trigger has minimum hit height "44px"
+  And hero stop filter trigger has minimum hit height "44px"
+  And hero stop filter trigger width equals "100%"
 
 Scenario: Active destination filter is visually prominent
   Given the departures stylesheet
@@ -45,9 +55,15 @@ function getDeclarationValue(block, propertyName) {
 defineFeature(test, featureText, {
   createWorld: () => ({
     css: "",
+    html: "",
     trainGap: null,
     destinationHitHeight: null,
     stopHitHeight: null,
+    hasHeroFilterRail: false,
+    heroRailGap: null,
+    heroDestinationHitHeight: null,
+    heroStopHitHeight: null,
+    heroStopWidth: null,
     activeDestinationBackground: null,
     activeDestinationBorder: null,
     activeDestinationWeight: null,
@@ -61,6 +77,12 @@ defineFeature(test, featureText, {
       pattern: /^Given the departures stylesheet$/,
       run: ({ world }) => {
         world.css = fs.readFileSync(path.resolve(__dirname, "../styles/departures.css"), "utf8");
+      },
+    },
+    {
+      pattern: /^Given the app shell markup$/,
+      run: ({ world }) => {
+        world.html = fs.readFileSync(path.resolve(__dirname, "../index.html"), "utf8");
       },
     },
     {
@@ -95,6 +117,21 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^When hero card filter rail styles are inspected$/,
+      run: ({ world }) => {
+        const heroRailRule = getRuleBody(world.css, ".next-filter-rail");
+        const heroDestinationRule = getRuleBody(world.css, "#nextDestination.result-filter-trigger");
+        const heroStopRule = getRuleBody(world.css, "#nextTrack.result-filter-trigger");
+
+        world.hasHeroFilterRail = /id="nextSummary"[\s\S]*class="[^"]*next-hero[^"]*"/.test(world.html) &&
+          /class="next-filter-rail"/.test(world.html);
+        world.heroRailGap = getDeclarationValue(heroRailRule, "gap");
+        world.heroDestinationHitHeight = getDeclarationValue(heroDestinationRule, "min-height");
+        world.heroStopHitHeight = getDeclarationValue(heroStopRule, "min-height");
+        world.heroStopWidth = getDeclarationValue(heroStopRule, "width");
+      },
+    },
+    {
       pattern: /^Then train rows use "([^"]*)" vertical spacing between destination and stop$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.trainGap, args[0]);
@@ -110,6 +147,36 @@ defineFeature(test, featureText, {
       pattern: /^Then stop filter trigger has minimum hit height "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.stopHitHeight, args[0]);
+      },
+    },
+    {
+      pattern: /^Then hero card filter rail exists$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.hasHeroFilterRail, true);
+      },
+    },
+    {
+      pattern: /^Then hero card filter rail gap equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.heroRailGap, args[0]);
+      },
+    },
+    {
+      pattern: /^Then hero destination filter trigger has minimum hit height "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.heroDestinationHitHeight, args[0]);
+      },
+    },
+    {
+      pattern: /^Then hero stop filter trigger has minimum hit height "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.heroStopHitHeight, args[0]);
+      },
+    },
+    {
+      pattern: /^Then hero stop filter trigger width equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.heroStopWidth, args[0]);
       },
     },
     {

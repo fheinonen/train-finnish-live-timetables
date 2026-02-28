@@ -21,6 +21,7 @@ Scenario: Next departure is framed as a hero card
   When the departure presentation is inspected
   Then the next departure card has a hero style hook
   And the departures list appears after the next departure card
+  And the next label default text equals ""
 
 Scenario: Typography tokens define a distinct display and body pair
   Given the design token stylesheet
@@ -41,7 +42,7 @@ Scenario: Stop filter summary has a zero-state message
 Scenario: Stop mode status line stays concise
   Given stop mode next departure status input
   When stop mode status text is generated
-  Then stop mode status starts with "Next bus in "
+  Then stop mode status starts with "Bus in "
   And stop mode status does not include "550"
   And stop mode status does not include "Kamppi"
 `;
@@ -155,6 +156,7 @@ defineFeature(test, featureText, {
           nextSummaryPosition: world.html.indexOf('id="nextSummary"'),
           departuresPosition: world.html.indexOf('id="departures"'),
           nextSummaryClass: /id="nextSummary"[^>]*class="([^"]*)"/.exec(world.html)?.[1] || "",
+          nextLabelText: /id="nextLabel"[^>]*>([^<]*)</.exec(world.html)?.[1]?.trim?.() || "",
         };
       },
     },
@@ -171,6 +173,12 @@ defineFeature(test, featureText, {
         assert.ok(nextSummaryPosition >= 0, "Expected next summary section");
         assert.ok(departuresPosition >= 0, "Expected departures list");
         assert.ok(departuresPosition > nextSummaryPosition, "Expected departures list after next summary");
+      },
+    },
+    {
+      pattern: /^Then the next label default text equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.departureLayout.nextLabelText, args[0]);
       },
     },
     {
