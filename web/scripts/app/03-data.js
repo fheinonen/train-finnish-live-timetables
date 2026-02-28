@@ -757,9 +757,11 @@
     requestLocationAndLoad();
   }
 
-  function applyModeUiState() {
+  function applyModeUiState(options = {}) {
+    const modeOnly = Boolean(options.modeOnly);
     api.updateModeButtons();
     api.updateModeLabels();
+    if (modeOnly) return;
     api.renderResultsLimitControl();
     api.updateHelsinkiFilterButton();
     api.renderStopControls();

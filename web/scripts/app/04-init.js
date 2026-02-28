@@ -13,6 +13,34 @@
     api.requestLocationAndLoad();
   }
 
+  function scheduleNextFrame(task) {
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(task);
+      return;
+    }
+
+    setTimeout(task, 0);
+  }
+
+  function handleModeChange(nextMode) {
+    if (state.mode === nextMode) return;
+
+    api.trackFirstManualInteraction("mode_change", { toMode: nextMode });
+    state.mode = nextMode;
+    if (nextMode !== MODE_RAIL) {
+      state.helsinkiOnly = false;
+    }
+
+    // Keep the mode switch visual response synchronous, and defer heavier
+    // render/data work to the next frame so Firefox can paint immediately.
+    api.applyModeUiState({ modeOnly: true });
+    scheduleNextFrame(() => {
+      api.applyModeUiState();
+      api.persistUiState();
+      refreshWithCurrentLocationOrRequest();
+    });
+  }
+
   dom.locateBtn?.addEventListener("click", () => {
     api.trackFirstManualInteraction("refresh_location_click");
     api.requestLocationAndLoad();
@@ -24,42 +52,19 @@
   });
 
   dom.modeRailBtn?.addEventListener("click", () => {
-    if (state.mode === MODE_RAIL) return;
-    api.trackFirstManualInteraction("mode_change", { toMode: MODE_RAIL });
-    state.mode = MODE_RAIL;
-    api.applyModeUiState();
-    api.persistUiState();
-    refreshWithCurrentLocationOrRequest();
+    handleModeChange(MODE_RAIL);
   });
 
   dom.modeTramBtn?.addEventListener("click", () => {
-    if (state.mode === MODE_TRAM) return;
-    api.trackFirstManualInteraction("mode_change", { toMode: MODE_TRAM });
-    state.mode = MODE_TRAM;
-    state.helsinkiOnly = false;
-    api.applyModeUiState();
-    api.persistUiState();
-    refreshWithCurrentLocationOrRequest();
+    handleModeChange(MODE_TRAM);
   });
 
   dom.modeMetroBtn?.addEventListener("click", () => {
-    if (state.mode === MODE_METRO) return;
-    api.trackFirstManualInteraction("mode_change", { toMode: MODE_METRO });
-    state.mode = MODE_METRO;
-    state.helsinkiOnly = false;
-    api.applyModeUiState();
-    api.persistUiState();
-    refreshWithCurrentLocationOrRequest();
+    handleModeChange(MODE_METRO);
   });
 
   dom.modeBusBtn?.addEventListener("click", () => {
-    if (state.mode === MODE_BUS) return;
-    api.trackFirstManualInteraction("mode_change", { toMode: MODE_BUS });
-    state.mode = MODE_BUS;
-    state.helsinkiOnly = false;
-    api.applyModeUiState();
-    api.persistUiState();
-    refreshWithCurrentLocationOrRequest();
+    handleModeChange(MODE_BUS);
   });
 
   /* ─── Custom Results Limit Dropdown ─── */

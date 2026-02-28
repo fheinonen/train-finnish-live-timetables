@@ -46,6 +46,13 @@
   animation: pulse-dot 3s ease-in-out infinite;
 }
 
+@supports (-moz-appearance: none) {
+  .live-pill::before {
+    animation: none;
+    opacity: 0.88;
+  }
+}
+
 .next-summary {
   position: relative;
   margin: var(--space-4) 0 var(--space-5);
@@ -272,14 +279,27 @@ li {
 .skeleton-next,
 .skeleton-row {
   border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
+  background: var(--skeleton-base);
+  contain: paint;
+}
+
+.skeleton-next::after,
+.skeleton-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background: linear-gradient(
-    90deg,
-    var(--skeleton-base) 0%,
-    var(--skeleton-shine) 40%,
-    var(--skeleton-base) 80%
+    100deg,
+    transparent 18%,
+    var(--skeleton-shine) 48%,
+    transparent 78%
   );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  transform: translateX(-120%);
+  animation: skeleton-shimmer 1.3s linear infinite;
+  will-change: transform;
 }
 
 .skeleton-next {
@@ -288,6 +308,15 @@ li {
 
 .skeleton-row {
   height: 62px;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
+  }
 }
 
 li.empty-row {

@@ -168,6 +168,7 @@ h2 {
   border: 1px solid var(--interactive-active-border);
   transform: translateX(calc(var(--active-index) * (100% + 3px)));
   transition: transform var(--duration-medium) var(--ease-out);
+  will-change: transform;
   pointer-events: none;
 }
 
@@ -189,4 +190,11 @@ h2 {
 
 [data-theme="dark"] .theme-icon.sun {
   display: block;
+}
+
+@supports (-moz-appearance: none) {
+  .card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
