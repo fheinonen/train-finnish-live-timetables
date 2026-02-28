@@ -690,37 +690,58 @@
     api.setStatus("Getting your location...");
     api.setLoading(true);
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        state.currentCoords = {
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-        };
-        state.locationGranted = true;
-        api.setStorageItem("location:granted", "1");
-        api.setPermissionRequired(false);
-        api.setLoading(false);
-        load(state.currentCoords.lat, state.currentCoords.lon);
-      },
-      (err) => {
-        api.setLoading(false);
-        if (err.code === 1) {
-          api.setPermissionRequired(true);
-          api.setStatus(api.getGeolocationErrorStatus(err));
-          state.latestResponse = null;
-          dom.resultEl.classList.add("hidden");
-          api.updateNextSummary(null);
-          return;
-        }
+    const geolocationOptions = (enableHighAccuracy) => ({
+      enableHighAccuracy,
+      timeout: enableHighAccuracy ? 15000 : 10000,
+      maximumAge: 0,
+    });
 
+    const shouldRetryWithHighAccuracy = (error, usedHighAccuracy) => {
+      if (usedHighAccuracy) return false;
+      return error?.code === 2 || error?.code === 3;
+    };
+
+    const handleLocationSuccess = (pos) => {
+      state.currentCoords = {
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+      };
+      state.locationGranted = true;
+      api.setStorageItem("location:granted", "1");
+      api.setPermissionRequired(false);
+      api.setLoading(false);
+      load(state.currentCoords.lat, state.currentCoords.lon);
+    };
+
+    const handleLocationError = (error) => {
+      if (error.code === 1) {
+        api.setPermissionRequired(true);
+      } else {
         api.setPermissionRequired(false);
-        api.setStatus(api.getGeolocationErrorStatus(err));
-        state.latestResponse = null;
-        dom.resultEl.classList.add("hidden");
-        api.updateNextSummary(null);
-      },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 }
-    );
+      }
+
+      api.setStatus(api.getGeolocationErrorStatus(error));
+      state.latestResponse = null;
+      dom.resultEl.classList.add("hidden");
+      api.updateNextSummary(null);
+      api.setLoading(false);
+    };
+
+    const requestGeolocation = (enableHighAccuracy) => {
+      navigator.geolocation.getCurrentPosition(
+        handleLocationSuccess,
+        (error) => {
+          if (shouldRetryWithHighAccuracy(error, enableHighAccuracy)) {
+            requestGeolocation(true);
+            return;
+          }
+          handleLocationError(error);
+        },
+        geolocationOptions(enableHighAccuracy)
+      );
+    };
+
+    requestGeolocation(false);
 
     return true;
   }
