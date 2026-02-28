@@ -51,9 +51,11 @@ Scenario: Filters dropdown lists real stop ids with card stop code labels
   Then active member stop filter id equals "HSL:2002"
   And visible departures are filtered to stop id "HSL:2002"
   When data scope is refreshed from latest response
-  And data scope text does not include "stop id"
+  Then data scope chips equal "Stop H2002"
   When filters panel stop id "HSL:2002" is toggled again
   Then active member stop filter id equals ""
+  When data scope is refreshed from latest response
+  Then data scope is hidden
 
 Scenario: Real departure stop id resolves and toggles matching selectable stop
   Given stop mode with nearest stop "nearest-stop", alternative stop "custom-stop", and departure stop id "HSL:2002"
@@ -680,11 +682,19 @@ defineFeature(test, featureText, {
       },
     },
     {
-      pattern: /^(?:Then|When) data scope text does not include "([^"]*)"$/,
+      pattern: /^Then data scope chips equal "([^"]*)"$/,
       run: ({ assert, args, world }) => {
-        const dataScopeText = String(world.harness.dom.dataScopeEl.textContent || "");
-        assert.ok(dataScopeText.length > 0, "Expected data scope text to be populated");
-        assert.equal(dataScopeText.includes(args[0]), false);
+        const expected = args[0].split(",").map((value) => value.trim()).filter(Boolean);
+        const actual = (world.harness.dom.dataScopeEl.children || [])
+          .map((item) => String(item?.textContent || "").trim())
+          .filter(Boolean);
+        assert.deepEqual(actual, expected);
+      },
+    },
+    {
+      pattern: /^Then data scope is hidden$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.harness.dom.dataScopeEl.classList.contains("hidden"), true);
       },
     },
     {

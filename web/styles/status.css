@@ -43,7 +43,46 @@
   border-color: rgba(134, 179, 191, 0.3);
 }
 
-.data-scope,
+.data-scope {
+  margin: var(--space-2) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.data-scope-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--interactive-border);
+  background: var(--interactive-bg);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-normal);
+  font-family: var(--font-body);
+}
+
+.data-scope-chip--stop {
+  border-color: var(--interactive-border-hover);
+  background: var(--interactive-bg-hover);
+  color: var(--interactive-text);
+}
+
+.data-scope-chip--line {
+  border-color: var(--interactive-active-border);
+  background: var(--interactive-active-bg);
+  color: var(--interactive-active-text);
+}
+
+.data-scope-chip--destination {
+  border-color: var(--interactive-secondary-border-hover);
+  background: var(--interactive-secondary-bg-hover);
+  color: var(--interactive-secondary-text);
+}
+
 .last-updated {
   margin: 2px 0 0;
   font-size: var(--text-sm);

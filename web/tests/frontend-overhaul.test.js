@@ -37,6 +37,13 @@ Scenario: Stop filter summary has a zero-state message
   Given line filter count 0 and destination filter count 0
   When stop filter summary text is generated
   Then stop filter summary text equals "No filters"
+
+Scenario: Stop mode status line stays concise
+  Given stop mode next departure status input
+  When stop mode status text is generated
+  Then stop mode status starts with "Next bus in "
+  And stop mode status does not include "550"
+  And stop mode status does not include "Kamppi"
 `;
 
 function bootUiApi() {
@@ -78,7 +85,7 @@ function bootUiApi() {
 
   vm.createContext(context);
   vm.runInContext(scriptText, context, { filename: scriptPath });
-  return context.window.HMApp.api;
+  return context.window.HMApp;
 }
 
 defineFeature(test, featureText, {
@@ -88,6 +95,7 @@ defineFeature(test, featureText, {
     lineCount: 0,
     destinationCount: 0,
     actual: null,
+    statusText: "",
     controls: null,
     departureLayout: null,
     typographyTokens: null,
@@ -204,14 +212,56 @@ defineFeature(test, featureText, {
     {
       pattern: /^When stop filter summary text is generated$/,
       run: ({ world }) => {
-        const api = bootUiApi();
-        world.actual = api.buildStopFilterSummary(world.lineCount, world.destinationCount);
+        const app = bootUiApi();
+        world.actual = app.api.buildStopFilterSummary(world.lineCount, world.destinationCount);
       },
     },
     {
       pattern: /^Then stop filter summary text equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.actual, args[0]);
+      },
+    },
+    {
+      pattern: /^Given stop mode next departure status input$/,
+      run: ({ world }) => {
+        const app = bootUiApi();
+        app.state.mode = "bus";
+        app.state.busLineFilters = [];
+        app.state.busDestinationFilters = [];
+        app.state.stopFilterPinned = false;
+        app.state.busStopMemberFilterId = null;
+        world.statusText = app.api.buildStatusFromResponse({
+          station: {
+            stopName: "Kamppi",
+            stopCode: "H1234",
+            departures: [
+              {
+                line: "550",
+                destination: "Kamppi",
+                stopCode: "H1234",
+                stopName: "Kamppi",
+                departureIso: new Date(Date.now() + 6 * 60000).toISOString(),
+              },
+            ],
+          },
+        });
+      },
+    },
+    {
+      pattern: /^When stop mode status text is generated$/,
+      run: () => {},
+    },
+    {
+      pattern: /^Then stop mode status starts with "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.statusText.startsWith(args[0]), true);
+      },
+    },
+    {
+      pattern: /^Then stop mode status does not include "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.statusText.includes(args[0]), false);
       },
     },
   ],

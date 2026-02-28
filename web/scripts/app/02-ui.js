@@ -112,7 +112,7 @@
 
   function updateModeLabels() {
     const modeLabel = isStopMode() ? getStopModeLabel().title : "Rail";
-    const nextLabel = isStopMode() ? `Next ${getStopModeLabel().title}` : "Next Train";
+    const nextLabel = "Next";
 
     if (dom.modeEyebrowEl) {
       dom.modeEyebrowEl.textContent = `Helsinki Moves • ${modeLabel}`;
@@ -484,42 +484,76 @@
     return "—";
   }
 
+  function clearDataScopeContent() {
+    if (!dom.dataScopeEl) return;
+    if (typeof dom.dataScopeEl.replaceChildren === "function") {
+      dom.dataScopeEl.replaceChildren();
+      return;
+    }
+    if (Array.isArray(dom.dataScopeEl.children)) {
+      dom.dataScopeEl.children.length = 0;
+    }
+    dom.dataScopeEl.innerHTML = "";
+  }
+
+  function createDataScopeChip(text, variant = "default") {
+    const chip = document.createElement("span");
+    chip.className = "data-scope-chip";
+    if (variant) {
+      chip.classList.add(`data-scope-chip--${variant}`);
+    }
+    chip.textContent = text;
+    return chip;
+  }
+
+  function getActiveStopScopeLabel(data) {
+    const activeMemberStopId = String(state.busStopMemberFilterId || "").trim();
+    if (activeMemberStopId) {
+      const departures = Array.isArray(data?.station?.departures) ? data.station.departures : [];
+      const matchedDeparture = departures.find(
+        (departure) => String(departure?.stopId || "").trim() === activeMemberStopId
+      );
+      const matchedStopCode = String(matchedDeparture?.stopCode || "").trim();
+      if (matchedStopCode) return matchedStopCode;
+      return activeMemberStopId;
+    }
+
+    if (!state.stopFilterPinned) return "";
+    const stopMeta = getStopMeta(state.busStopId);
+    const stopCode = String(getStopCodes(stopMeta)[0] || "").trim();
+    if (stopCode) return stopCode;
+    return String(stopMeta?.name || state.busStopId || "").trim();
+  }
+
   function updateDataScope(data) {
     if (!dom.dataScopeEl) return;
+    clearDataScopeContent();
+    dom.dataScopeEl.textContent = "";
 
     if (!isStopMode()) {
       dom.dataScopeEl.classList.add("hidden");
-      dom.dataScopeEl.textContent = "";
       return;
     }
 
-    const stopName = String(data?.station?.stopName || getStopMeta(state.busStopId)?.name || "").trim();
-    const selectedStopCodes = api.uniqueNonEmptyStrings([
-      ...(Array.isArray(data?.station?.stopCodes) ? data.station.stopCodes : []),
-      data?.station?.stopCode,
-      ...getStopCodes(getStopMeta(state.busStopId)),
-    ]);
-    const stopIdsScope = selectedStopCodes.join(", ");
-    const activeMemberStopId = String(state.busStopMemberFilterId || "").trim();
-    const stopScope = activeMemberStopId
-      ? `stop ${activeMemberStopId}`
-      : state.stopFilterPinned
-        ? "custom stop selected"
-        : "nearest stop";
-    const lineScope =
-      state.busLineFilters.length === 0
-        ? "all lines"
-        : `${state.busLineFilters.length} line${state.busLineFilters.length === 1 ? "" : "s"} selected`;
-    const destinationScope =
-      state.busDestinationFilters.length === 0
-        ? "all destinations"
-        : `${state.busDestinationFilters.length} destination${state.busDestinationFilters.length === 1 ? "" : "s"} selected`;
-    const resultScope = `${api.getActiveResultsLimit()} results`;
+    const chips = [];
+    const stopLabel = getActiveStopScopeLabel(data);
+    if (stopLabel) {
+      chips.push(createDataScopeChip(`Stop ${stopLabel}`, "stop"));
+    }
+    for (const line of state.busLineFilters) {
+      chips.push(createDataScopeChip(`Line ${line}`, "line"));
+    }
+    for (const destination of state.busDestinationFilters) {
+      chips.push(createDataScopeChip(destination, "destination"));
+    }
 
-    if (!stopName) {
-      dom.dataScopeEl.textContent = `Selecting stop... (${stopScope}, ${lineScope}, ${destinationScope}, ${resultScope})`;
-    } else {
-      dom.dataScopeEl.textContent = `Selected stop ${stopName} (${stopIdsScope || "—"}) - ${stopScope}, ${lineScope}, ${destinationScope}, ${resultScope}`;
+    if (chips.length === 0) {
+      dom.dataScopeEl.classList.add("hidden");
+      return;
+    }
+
+    for (const chip of chips) {
+      dom.dataScopeEl.appendChild(chip);
     }
 
     dom.dataScopeEl.classList.remove("hidden");
@@ -986,17 +1020,8 @@
         : "No upcoming commuter trains right now.";
     }
 
-    const destination = next.destination ? ` • ${next.destination}` : "";
-    const nextTrack =
-      state.mode === MODE_RAIL
-        ? next.track
-          ? ` • Track ${next.track}`
-          : ""
-        : data.station.stopName || data.station.stopCode
-          ? ` • ${buildModeStopDisplay(data.station, next)}`
-          : "";
     const serviceName = isStopMode() ? getStopModeLabel().singular : "train";
-    return `Next ${next.line || serviceName} in ${formatMinutes(next.departureIso)}${destination}${nextTrack}`;
+    return `Next ${serviceName} in ${formatMinutes(next.departureIso)}`;
   }
 
   function getLoadErrorStatus(error) {
