@@ -128,7 +128,7 @@ h2 {
   background: var(--segment-track-bg);
   border: 1px solid var(--interactive-border);
   border-radius: var(--radius-xs);
-  padding: 5px;
+  padding: 2px;
   overflow: hidden;
   --active-index: 0;
 }
@@ -138,7 +138,7 @@ h2 {
   z-index: 1;
   min-width: 0;
   min-height: 48px;
-  padding: 6px var(--space-3);
+  padding: 9px var(--space-3);
   border: none;
   border-radius: 0;
   background: transparent;
@@ -180,8 +180,11 @@ h2 {
   position: absolute;
   top: 4px;
   bottom: 4px;
-  left: calc(9px + (var(--active-index) * ((100% - 10px) / 4)));
-  width: calc((100% - 10px) / 4 - 7px);
+  --_inset: 2px;
+  --_seg-gap: 4px;
+  --_slot: calc((100% - var(--_inset) * 2) / 4);
+  left: calc(var(--_inset) + var(--_seg-gap) / 2 + var(--active-index) * var(--_slot));
+  width: calc(var(--_slot) - var(--_seg-gap));
   border-radius: var(--radius-xs);
   background: var(--segment-active-bg);
   border: 1px solid var(--segment-active-border);

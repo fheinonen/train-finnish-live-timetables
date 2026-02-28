@@ -179,6 +179,12 @@ defineFeature(test, featureText, {
     {
       pattern: /^Then the mode indicator keeps visible inset from segment edges$/,
       run: async ({ world }) => {
+        // Disable transitions so we measure final position, not mid-animation
+        await world.page.evaluate(() => {
+          document.querySelector(".segment-indicator").style.transition = "none";
+        });
+        // Force a reflow so the non-transitioned position takes effect
+        await world.page.evaluate(() => void document.body.offsetHeight);
         const metrics = await world.page.evaluate(() => {
           const indicator = document.querySelector(".segment-indicator");
           const segments = [...document.querySelectorAll(".segment")];
