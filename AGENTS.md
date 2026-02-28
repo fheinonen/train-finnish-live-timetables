@@ -19,7 +19,17 @@
   `node --test ... 2>&1 | rg -v '^(✔|ℹ tests|ℹ suites|ℹ pass|ℹ fail 0|ℹ cancelled|ℹ skipped|ℹ todo|ℹ duration_ms)'`
 
 ## UI Change Workflow
-- For every UI/styling change, run visual regression checks before sharing results.
+- During UI iteration, prefer geometry + behavior contracts before snapshots.
+- For fast iteration from `web/`, run:
+  - `npm run ui:geometry`
+  - `npm run ui:overlay`
+  - or `npm run ui:fast`
+- Use live overlay mode to compare against a mock without committing snapshots:
+  - open `/?mode=bus&overlay=1`
+  - set `Image URL` in the overlay panel
+  - press `O` to toggle overlay
+  - press `Shift+O` to show/hide overlay controls
+- For every UI/styling change, still run visual regression checks before sharing final results.
 - Visual checks are snapshot-based and must cover both viewports:
   - mobile
   - desktop

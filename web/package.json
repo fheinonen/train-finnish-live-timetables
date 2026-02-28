@@ -19,6 +19,9 @@
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:webkit": "playwright test --project=webkit",
     "test:e2e:install": "playwright install --with-deps chromium firefox webkit",
+    "ui:geometry": "playwright test tests/e2e/ui-geometry-contracts.spec.js --project=chromium --reporter=line",
+    "ui:overlay": "playwright test tests/e2e/ui-overlay-tools.spec.js --project=chromium --reporter=line",
+    "ui:fast": "npm run ui:geometry && npm run ui:overlay",
     "ui:check": "playwright test tests/e2e/ui-visual-regression.spec.js --project=chromium --reporter=line",
     "ui:baseline": "playwright test tests/e2e/ui-visual-regression.spec.js --project=chromium --update-snapshots --reporter=line"
   },

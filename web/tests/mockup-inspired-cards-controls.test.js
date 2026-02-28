@@ -107,8 +107,8 @@ Scenario: Long destinations stay readable in result cards
 Scenario: Card timing typography matches mockup emphasis
   Given the departures stylesheet
   When timing text styles are inspected
-  Then relative departure time uses larger type scale
-  And absolute departure time uses larger supporting scale
+  Then relative departure time uses primary timing scale
+  And absolute departure time is slightly smaller
 
 Scenario: Transit mode selector matches mockup segmented style
   Given the app shell is rendered
@@ -119,6 +119,9 @@ Scenario: Transit mode selector matches mockup segmented style
   And inactive modes are visually separated with subtle dividers
   And the segmented track uses the mockup slate tone
   And the active segment uses mockup border and shadow treatment
+  And the active segment uses flat styling without 3d depth
+  And the active segment keeps a small horizontal gap from divider lines
+  And the active segment uses balanced left and right inset spacing
   And the selector uses mockup capsule height and spacing
   And the selector corners match other control buttons
   And light theme segment colors stay within the light palette
@@ -990,13 +993,13 @@ defineFeature(test, featureText, {
       },
     },
     {
-      pattern: /^Then relative departure time uses larger type scale$/,
+      pattern: /^Then relative departure time uses primary timing scale$/,
       run: ({ assert, world }) => {
-        assert.equal(world.timingStyleChecks?.remainingSize, "1.44rem");
+        assert.equal(world.timingStyleChecks?.remainingSize, "var(--text-lg)");
       },
     },
     {
-      pattern: /^Then absolute departure time uses larger supporting scale$/,
+      pattern: /^Then absolute departure time is slightly smaller$/,
       run: ({ assert, world }) => {
         assert.equal(world.timingStyleChecks?.clockSize, "var(--text-base)");
       },
@@ -1019,11 +1022,18 @@ defineFeature(test, featureText, {
           activeSegmentBackground: getDeclarationValue(activeSegmentRule, "background"),
           activeSegmentBorder: getDeclarationValue(activeSegmentRule, "border"),
           activeSegmentShadow: getDeclarationValue(activeSegmentRule, "box-shadow"),
+          activeSegmentLeft: getDeclarationValue(activeSegmentRule, "left"),
+          activeSegmentWidth: getDeclarationValue(activeSegmentRule, "width"),
+          activeSegmentTop: getDeclarationValue(activeSegmentRule, "top"),
+          activeSegmentBottom: getDeclarationValue(activeSegmentRule, "bottom"),
           hasDividerBorder: getDeclarationValue(dividerRule, "border-left"),
+          activeSegmentTextShadow: getDeclarationValue(getRuleBody(world.shellCss, ".segment.is-active"), "text-shadow"),
           lightTrackToken:
             world.lightThemeCss.match(/--segment-track-bg:\s*([^;]+);/)?.[1]?.trim() || null,
           lightActiveToken:
             world.lightThemeCss.match(/--segment-active-bg:\s*([^;]+);/)?.[1]?.trim() || null,
+          lightActiveShadowToken:
+            world.lightThemeCss.match(/--segment-active-shadow:\s*([^;]+);/)?.[1]?.trim() || null,
         };
       },
     },
@@ -1061,6 +1071,30 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^Then the active segment uses flat styling without 3d depth$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.modeSelectorChecks.lightActiveShadowToken, "none");
+        assert.equal(world.modeSelectorChecks.activeSegmentTextShadow, "none");
+      },
+    },
+    {
+      pattern: /^Then the active segment keeps a small horizontal gap from divider lines$/,
+      run: ({ assert, world }) => {
+        assert.equal(
+          world.modeSelectorChecks.activeSegmentLeft,
+          "calc(9px + (var(--active-index) * ((100% - 10px) / 4)))"
+        );
+        assert.equal(world.modeSelectorChecks.activeSegmentWidth, "calc((100% - 10px) / 4 - 7px)");
+      },
+    },
+    {
+      pattern: /^Then the active segment uses balanced left and right inset spacing$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.modeSelectorChecks.activeSegmentTop, "4px");
+        assert.equal(world.modeSelectorChecks.activeSegmentBottom, "4px");
+      },
+    },
+    {
       pattern: /^Then the selector uses mockup capsule height and spacing$/,
       run: ({ assert, world }) => {
         assert.equal(world.modeSelectorChecks.segmentMinHeight, "48px");
@@ -1079,7 +1113,7 @@ defineFeature(test, featureText, {
         assert.equal(world.modeSelectorChecks.lightTrackToken, "#f4efe4");
         assert.equal(
           world.modeSelectorChecks.lightActiveToken,
-          "linear-gradient(180deg, #c99644, #b57a2c)"
+          "#be8634"
         );
       },
     },

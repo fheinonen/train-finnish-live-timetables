@@ -222,6 +222,46 @@
       </section>
     </main>
 
+    <div id="mockOverlayLayer" class="mock-overlay-layer hidden" aria-hidden="true">
+      <img id="mockOverlayImage" class="mock-overlay-image" alt="" />
+    </div>
+    <aside id="mockOverlayControls" class="mock-overlay-controls hidden" aria-label="Mock overlay controls">
+      <p class="mock-overlay-title">Mock Overlay</p>
+      <label class="mock-overlay-field">
+        <span>Image URL</span>
+        <input
+          id="mockOverlayUrlInput"
+          class="mock-overlay-input"
+          type="url"
+          placeholder="Paste mock image URL"
+          autocomplete="off"
+        />
+      </label>
+      <label class="mock-overlay-field">
+        <span>Opacity</span>
+        <input id="mockOverlayOpacityInput" type="range" min="0" max="100" step="1" value="45" />
+      </label>
+      <div class="mock-overlay-grid">
+        <label class="mock-overlay-field">
+          <span>Offset X</span>
+          <input id="mockOverlayOffsetXInput" class="mock-overlay-input" type="number" value="0" />
+        </label>
+        <label class="mock-overlay-field">
+          <span>Offset Y</span>
+          <input id="mockOverlayOffsetYInput" class="mock-overlay-input" type="number" value="0" />
+        </label>
+      </div>
+      <label class="mock-overlay-field">
+        <span>Scale %</span>
+        <input id="mockOverlayScaleInput" class="mock-overlay-input" type="number" min="50" max="200" value="100" />
+      </label>
+      <div class="mock-overlay-actions">
+        <button id="mockOverlayToggleBtn" type="button">Overlay: Off</button>
+        <button id="mockOverlayResetBtn" class="secondary" type="button">Reset</button>
+      </div>
+      <p class="mock-overlay-help">Press O to toggle overlay. Press Shift+O to hide/show this panel.</p>
+    </aside>
+
     <script src="/dist/app.js" defer></script>
   </body>
 </html>

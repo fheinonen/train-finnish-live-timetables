@@ -167,22 +167,21 @@ h2 {
 
 .segment.is-active {
   color: var(--segment-active-text);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.24);
+  text-shadow: none;
 }
 
 .segment-indicator {
   position: absolute;
-  top: 5px;
-  bottom: 5px;
-  left: 5px;
-  width: calc((100% - 10px) / 4);
+  top: 4px;
+  bottom: 4px;
+  left: calc(9px + (var(--active-index) * ((100% - 10px) / 4)));
+  width: calc((100% - 10px) / 4 - 7px);
   border-radius: var(--radius-xs);
   background: var(--segment-active-bg);
   border: 1px solid var(--segment-active-border);
   box-shadow: var(--segment-active-shadow);
-  transform: translateX(calc(var(--active-index) * 100%));
-  transition: transform var(--duration-medium) var(--ease-out);
-  will-change: transform;
+  transition: left var(--duration-medium) var(--ease-out);
+  will-change: left;
   pointer-events: none;
 }
 
