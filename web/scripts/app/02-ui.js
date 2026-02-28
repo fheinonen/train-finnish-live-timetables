@@ -502,7 +502,7 @@
     const stopIdsScope = selectedStopCodes.join(", ");
     const activeMemberStopId = String(state.busStopMemberFilterId || "").trim();
     const stopScope = activeMemberStopId
-      ? `stop id ${activeMemberStopId}`
+      ? `stop ${activeMemberStopId}`
       : state.stopFilterPinned
         ? "custom stop selected"
         : "nearest stop";
@@ -609,7 +609,7 @@
     if (stopIdOptions.length === 0) {
       const empty = document.createElement("span");
       empty.className = "chip-empty";
-      empty.textContent = "No stop ids";
+      empty.textContent = "No stops";
       dom.busStopFiltersEl.appendChild(empty);
       return;
     }

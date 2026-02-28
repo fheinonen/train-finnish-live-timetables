@@ -14,6 +14,7 @@ Scenario: Stop mode filters use progressive disclosure
   Then a stop filter toggle action exists
   And the stop filter panel is collapsed by default
   And the stop filter summary says "No filters"
+  And the stop filter category label says "Stops"
 
 Scenario: Next departure is framed as a hero card
   Given the app shell markup
@@ -102,10 +103,14 @@ defineFeature(test, featureText, {
       pattern: /^When stop controls are inspected$/,
       run: ({ world }) => {
         const summaryMatch = world.html.match(/id="stopFilterSummary"[^>]*>([^<]+)</);
+        const stopFilterLabelMatch = world.html.match(
+          /<p class="bus-label">([^<]+)<\/p>\s*<div id="busStopFilters"/
+        );
         world.controls = {
           hasToggle: /id="stopFiltersToggleBtn"/.test(world.html),
           hasCollapsedPanel: /id="stopFiltersPanel"[^>]*class="[^"]*hidden/.test(world.html),
           summary: summaryMatch ? summaryMatch[1].trim() : null,
+          stopFilterLabel: stopFilterLabelMatch ? stopFilterLabelMatch[1].trim() : null,
         };
       },
     },
@@ -126,6 +131,13 @@ defineFeature(test, featureText, {
       run: ({ assert, args, world }) => {
         assert.ok(world.controls, "Expected stop controls to be inspected");
         assert.equal(world.controls.summary, args[0]);
+      },
+    },
+    {
+      pattern: /^Then the stop filter category label says "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.ok(world.controls, "Expected stop controls to be inspected");
+        assert.equal(world.controls.stopFilterLabel, args[0]);
       },
     },
     {

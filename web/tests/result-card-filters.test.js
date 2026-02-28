@@ -50,6 +50,8 @@ Scenario: Filters dropdown lists real stop ids with card stop code labels
   When filters panel stop id "HSL:2002" is toggled
   Then active member stop filter id equals "HSL:2002"
   And visible departures are filtered to stop id "HSL:2002"
+  When data scope is refreshed from latest response
+  And data scope text does not include "stop id"
   When filters panel stop id "HSL:2002" is toggled again
   Then active member stop filter id equals ""
 
@@ -669,6 +671,20 @@ defineFeature(test, featureText, {
       pattern: /^Then active member stop filter id equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(String(world.harness.app.state.busStopMemberFilterId || ""), args[0]);
+      },
+    },
+    {
+      pattern: /^When data scope is refreshed from latest response$/,
+      run: ({ world }) => {
+        world.harness.app.api.updateDataScope(world.harness.app.state.latestResponse);
+      },
+    },
+    {
+      pattern: /^(?:Then|When) data scope text does not include "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        const dataScopeText = String(world.harness.dom.dataScopeEl.textContent || "");
+        assert.ok(dataScopeText.length > 0, "Expected data scope text to be populated");
+        assert.equal(dataScopeText.includes(args[0]), false);
       },
     },
     {

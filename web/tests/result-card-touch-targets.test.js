@@ -13,6 +13,13 @@ Scenario: Destination and stop taps have separated hit targets
   Then train rows use "var(--space-2)" vertical spacing between destination and stop
   And destination filter trigger has minimum hit height "36px"
   And stop filter trigger has minimum hit height "36px"
+
+Scenario: Active destination filter is visually prominent
+  Given the departures stylesheet
+  When active destination filter styles are inspected
+  Then active destination filter background equals "var(--interactive-active-bg)"
+  And active destination filter border equals "1px solid var(--interactive-active-border)"
+  And active destination filter text weight equals "var(--weight-bold)"
 `;
 
 function getRuleBody(css, selector) {
@@ -33,6 +40,9 @@ defineFeature(test, featureText, {
     trainGap: null,
     destinationHitHeight: null,
     stopHitHeight: null,
+    activeDestinationBackground: null,
+    activeDestinationBorder: null,
+    activeDestinationWeight: null,
   }),
   stepDefinitions: [
     {
@@ -54,6 +64,15 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^When active destination filter styles are inspected$/,
+      run: ({ world }) => {
+        const activeDestinationRule = getRuleBody(world.css, ".destination.result-filter-trigger.is-active");
+        world.activeDestinationBackground = getDeclarationValue(activeDestinationRule, "background");
+        world.activeDestinationBorder = getDeclarationValue(activeDestinationRule, "border");
+        world.activeDestinationWeight = getDeclarationValue(activeDestinationRule, "font-weight");
+      },
+    },
+    {
       pattern: /^Then train rows use "([^"]*)" vertical spacing between destination and stop$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.trainGap, args[0]);
@@ -69,6 +88,24 @@ defineFeature(test, featureText, {
       pattern: /^Then stop filter trigger has minimum hit height "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.stopHitHeight, args[0]);
+      },
+    },
+    {
+      pattern: /^Then active destination filter background equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.activeDestinationBackground, args[0]);
+      },
+    },
+    {
+      pattern: /^Then active destination filter border equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.activeDestinationBorder, args[0]);
+      },
+    },
+    {
+      pattern: /^Then active destination filter text weight equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.activeDestinationWeight, args[0]);
       },
     },
   ],

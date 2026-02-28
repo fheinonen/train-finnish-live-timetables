@@ -278,6 +278,22 @@ li {
   width: 100%;
 }
 
+.destination.result-filter-trigger.is-active {
+  background: var(--interactive-active-bg);
+  border: 1px solid var(--interactive-active-border);
+  color: var(--interactive-active-text);
+  font-weight: var(--weight-bold);
+  box-shadow: 0 0 0 2px rgba(241, 191, 111, 0.2);
+}
+
+#nextDestination.result-filter-trigger.is-active {
+  background: var(--interactive-active-bg);
+  border: 1px solid var(--interactive-active-border);
+  color: var(--interactive-active-text);
+  font-weight: var(--weight-bold);
+  box-shadow: 0 0 0 2px rgba(241, 191, 111, 0.2);
+}
+
 .track.result-filter-trigger {
   display: inline-flex;
   align-items: center;
