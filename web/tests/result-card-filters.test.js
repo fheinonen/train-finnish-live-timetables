@@ -29,9 +29,24 @@ Scenario: Tapping selected stop in a result card deselects to nearest stop
   When result card stop "custom-stop" is toggled
   Then selected stop equals "nearest-stop"
 
+Scenario: Tapping nearest stop toggles explicit stop filter on and off
+  Given stop mode with nearest stop "nearest-stop" and selected stop "nearest-stop"
+  When result card stop "nearest-stop" is toggled
+  Then stop filter summary text equals "1 filter"
+  When result card stop "nearest-stop" is toggled again
+  Then stop filter summary text equals "No filters"
+
 Scenario: Tapping alternative stop applies stop filter state
   Given stop mode with nearest stop "nearest-stop" and alternative stop "custom-stop"
   When result card stop "custom-stop" is toggled
+  Then selected stop equals "custom-stop"
+  And stop filter summary text equals "1 filter"
+
+Scenario: Real departure stop id resolves and toggles matching selectable stop
+  Given stop mode with nearest stop "nearest-stop", alternative stop "custom-stop", and departure stop id "HSL:2002"
+  When result card stop target is resolved from departure stop id
+  Then resolved stop target equals "custom-stop"
+  When resolved result card stop is toggled
   Then selected stop equals "custom-stop"
   And stop filter summary text equals "1 filter"
 
@@ -157,6 +172,7 @@ function createUiHarness({
   viewportWidth = 1024,
   busStops = [{ id: "nearest-stop", name: "Nearest", code: "1001", stopCodes: ["1001"], distanceMeters: 90 }],
   busStopId = "nearest-stop",
+  stopFilterPinned = false,
 } = {}) {
   const dom = {
     busControlsEl: createMockElement("section", ["hidden"]),
@@ -241,6 +257,7 @@ function createUiHarness({
         ].map((value) => ({ value, count: 1 })),
       },
       stopFiltersPanelOpen: false,
+      stopFilterPinned,
       currentCoords: { lat: 60.1, lon: 24.9 },
       latestResponse: {
         station: {
@@ -292,6 +309,9 @@ defineFeature(test, featureText, {
   createWorld: () => ({
     harness: null,
     lastVisibleDepartures: [],
+    departureForResolution: null,
+    stationForResolution: null,
+    resolvedStopTarget: null,
   }),
   stepDefinitions: [
     {
@@ -398,6 +418,7 @@ defineFeature(test, featureText, {
             { id: args[1], name: "Custom", code: "2001", stopCodes: ["2001"], distanceMeters: 220 },
           ],
           busStopId: args[1],
+          stopFilterPinned: args[1] !== args[0],
         });
       },
     },
@@ -415,9 +436,76 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^Given stop mode with nearest stop "([^"]*)", alternative stop "([^"]*)", and departure stop id "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.harness = createUiHarness({
+          departures: buildDepartures(["550", "560"], "line"),
+          busStops: [
+            {
+              id: args[0],
+              name: "Nearest",
+              code: "1001",
+              stopCodes: ["1001"],
+              memberStopIds: ["HSL:1001"],
+              distanceMeters: 90,
+            },
+            {
+              id: args[1],
+              name: "Custom",
+              code: "2001",
+              stopCodes: ["2001"],
+              memberStopIds: ["HSL:2001", "HSL:2002"],
+              distanceMeters: 220,
+            },
+          ],
+          busStopId: args[0],
+        });
+        world.departureForResolution = {
+          line: "550",
+          destination: "Kamppi",
+          stopId: args[2],
+          stopCode: "",
+          stopName: "Custom",
+          departureIso: new Date(Date.now() + 120000).toISOString(),
+        };
+        world.stationForResolution = {
+          stopCode: "1001",
+          stopCodes: ["1001"],
+          stopName: "Station",
+        };
+      },
+    },
+    {
       pattern: /^When result card stop "([^"]*)" is toggled$/,
       run: ({ args, world }) => {
         world.harness.app.api.toggleStopFromResultCard(args[0]);
+      },
+    },
+    {
+      pattern: /^When result card stop "([^"]*)" is toggled again$/,
+      run: ({ args, world }) => {
+        world.harness.app.api.toggleStopFromResultCard(args[0]);
+      },
+    },
+    {
+      pattern: /^When result card stop target is resolved from departure stop id$/,
+      run: ({ world }) => {
+        world.resolvedStopTarget = world.harness.app.api.resolveStopIdFromDeparture(
+          world.departureForResolution,
+          world.stationForResolution
+        );
+      },
+    },
+    {
+      pattern: /^Then resolved stop target equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.resolvedStopTarget, args[0]);
+      },
+    },
+    {
+      pattern: /^When resolved result card stop is toggled$/,
+      run: ({ world }) => {
+        world.harness.app.api.toggleStopFromResultCard(world.resolvedStopTarget);
       },
     },
     {

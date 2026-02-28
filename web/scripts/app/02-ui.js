@@ -220,10 +220,7 @@
 
   function hasActiveStopFilter() {
     if (!isStopMode()) return false;
-    const nearestStopId = getNearestStopId();
-    const selectedStopId = String(state.busStopId || "").trim();
-    if (!selectedStopId || !nearestStopId) return false;
-    return selectedStopId !== nearestStopId;
+    return Boolean(state.stopFilterPinned);
   }
 
   function clearStopFilterAttention() {
@@ -444,6 +441,13 @@
     return stopCodes;
   }
 
+  function getStopMemberIds(stop) {
+    return api.uniqueNonEmptyStrings([
+      ...(Array.isArray(stop?.memberStopIds) ? stop.memberStopIds : []),
+      stop?.id,
+    ]);
+  }
+
   function buildStopDisplay(station, departure = null) {
     const selectedStop = getStopMeta(state.busStopId);
     const stopName = String(departure?.stopName || station?.stopName || selectedStop?.name || "").trim();
@@ -556,6 +560,7 @@
     }
 
     state.busStopId = stopId;
+    state.stopFilterPinned = true;
     toggleStopDropdown(false);
 
     if (dom.busStopSelectLabelEl) {
@@ -582,14 +587,30 @@
     const normalizedStopId = String(stopId || "").trim();
     if (!normalizedStopId) return false;
 
+    const currentStopId = String(state.busStopId || "").trim() || null;
     const nearestStopId = getNearestStopId();
-    let nextStopId = normalizedStopId;
-    if (state.busStopId === normalizedStopId) {
-      nextStopId = nearestStopId && nearestStopId !== normalizedStopId ? nearestStopId : null;
+    const currentPinned = Boolean(state.stopFilterPinned);
+    let nextStopId = currentStopId;
+    let nextPinned = currentPinned;
+    let requireLoad = false;
+
+    if (currentStopId !== normalizedStopId) {
+      nextStopId = normalizedStopId;
+      nextPinned = true;
+      requireLoad = true;
+    } else if (currentPinned) {
+      nextPinned = false;
+      if (nearestStopId && nearestStopId !== currentStopId) {
+        nextStopId = nearestStopId;
+        requireLoad = true;
+      }
+    } else {
+      nextPinned = true;
     }
 
-    if (nextStopId === state.busStopId) return false;
+    if (nextStopId === currentStopId && nextPinned === currentPinned) return false;
     state.busStopId = nextStopId;
+    state.stopFilterPinned = nextPinned;
 
     if (dom.busStopSelectLabelEl) {
       const activeStop = getStopMeta(state.busStopId);
@@ -602,13 +623,19 @@
       interactionType: "result_card_stop_toggle",
       changeType: "result_card_stop_toggle",
       showAttention: true,
-      requireLoad: true,
+      requireLoad,
       extraContext: { selectedStopId: state.busStopId || "" },
     });
     return true;
   }
 
   function resolveStopIdFromDeparture(departure, station = null) {
+    const departureStopId = String(departure?.stopId || "").trim();
+    if (departureStopId) {
+      const matchedById = state.busStops.find((stop) => getStopMemberIds(stop).includes(departureStopId));
+      if (matchedById?.id) return matchedById.id;
+    }
+
     const stopCodeCandidates = api.uniqueNonEmptyStrings([
       departure?.stopCode,
       ...(Array.isArray(station?.stopCodes) ? station.stopCodes : []),

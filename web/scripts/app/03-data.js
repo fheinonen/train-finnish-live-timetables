@@ -76,6 +76,10 @@
             id: stop.id,
             name: stop.name,
             code: String(stop.code || "").trim() || null,
+            memberStopIds: api.uniqueNonEmptyStrings([
+              ...(Array.isArray(stop.memberStopIds) ? stop.memberStopIds : []),
+              stop.id,
+            ]),
             stopCodes: api.uniqueNonEmptyStrings([
               ...(Array.isArray(stop.stopCodes) ? stop.stopCodes : []),
               stop.code,
@@ -88,11 +92,26 @@
 
     const selectedFromResponse = String(responseData?.selectedStopId || "").trim() || null;
     const stopExists = (id) => stops.some((stop) => stop.id === id);
+    const previousStopId = String(state.busStopId || "").trim() || null;
+    const hadInvalidSelectedStop = Boolean(
+      previousStopId &&
+      !stopExists(previousStopId) &&
+      !(selectedFromResponse && stopExists(selectedFromResponse))
+    );
 
     if (selectedFromResponse && stopExists(selectedFromResponse)) {
       state.busStopId = selectedFromResponse;
     } else if (!state.busStopId || !stopExists(state.busStopId)) {
       state.busStopId = stops[0]?.id || null;
+    }
+
+    const nearestStopId = stops[0]?.id || null;
+    if (!state.busStopId) {
+      state.stopFilterPinned = false;
+    } else if (nearestStopId && state.busStopId !== nearestStopId) {
+      state.stopFilterPinned = true;
+    } else if (hadInvalidSelectedStop) {
+      state.stopFilterPinned = false;
     }
 
     if (state.deferInitialStopContext) {
@@ -102,6 +121,7 @@
       state.deferredBusDestinationFilters = [];
       state.busLineFilters = [];
       state.busDestinationFilters = [];
+      state.stopFilterPinned = false;
     }
 
     state.hasCompletedInitialStopModeLoad = true;

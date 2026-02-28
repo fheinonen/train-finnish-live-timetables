@@ -235,6 +235,7 @@ function mapSelectableStops(stops) {
     id: stop.id,
     name: stop.name,
     code: stop.code || null,
+    memberStopIds: stop.memberStopIds || [stop.id],
     stopCodes: stop.memberStopCodes || [],
     distanceMeters: Math.round(stop.distance),
   }));

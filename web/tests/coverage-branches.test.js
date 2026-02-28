@@ -245,6 +245,12 @@ Scenario: Group selectable stops by name and pick nearest canonical stop
   Then canonical selectable stop id equals "HSL:near"
   And grouped member stop codes equal "1000|1001"
 
+Scenario: API selectable stops include grouped member stop ids
+  Given two BUS stops with same name and different distances
+  When selectable stop groups are built
+  And selectable stops are mapped for API response
+  Then mapped selectable stop member ids equal "HSL:far|HSL:near"
+
 Scenario: Filter and sort upcoming departures
   Given departures with one past and two future timestamps
   When upcoming departures are filtered
@@ -318,6 +324,21 @@ defineFeature(test, departuresHelpersFeature, {
       pattern: /^Then grouped member stop codes equal "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.output[0].memberStopCodes.join("|"), args[0]);
+      },
+    },
+    {
+      pattern: /^When selectable stops are mapped for API response$/,
+      run: ({ world }) => {
+        world.output = departuresApi.mapSelectableStops(world.output);
+      },
+    },
+    {
+      pattern: /^Then mapped selectable stop member ids equal "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(
+          [...(world.output[0].memberStopIds || [])].sort((a, b) => a.localeCompare(b)).join("|"),
+          args[0]
+        );
       },
     },
     {
