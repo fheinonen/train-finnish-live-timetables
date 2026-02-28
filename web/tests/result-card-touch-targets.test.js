@@ -31,13 +31,13 @@ Scenario: Active destination filter is visually prominent
   And active destination filter border equals "1px solid var(--interactive-active-border)"
   And active destination filter text weight equals "var(--weight-bold)"
 
-Scenario: Active stop filter uses cyan capsule styling
+Scenario: Active stop filter matches destination active styling
   Given the departures stylesheet
   When active stop filter styles are inspected
-  Then active stop filter background equals "var(--interactive-bg-hover)"
-  And active stop filter border equals "1px solid var(--interactive-border-hover)"
-  And active stop filter text color equals "var(--interactive-text)"
-  And active stop filter text weight equals "var(--weight-semibold)"
+  Then active stop filter background equals "var(--interactive-active-bg)"
+  And active stop filter border equals "1px solid var(--interactive-active-border)"
+  And active stop filter text color equals "var(--interactive-active-text)"
+  And active stop filter text weight equals "var(--weight-bold)"
 
 Scenario: Active hero filter pill exposes clear affordance
   Given the departures stylesheet
