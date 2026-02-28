@@ -20,6 +20,14 @@ Scenario: Active destination filter is visually prominent
   Then active destination filter background equals "var(--interactive-active-bg)"
   And active destination filter border equals "1px solid var(--interactive-active-border)"
   And active destination filter text weight equals "var(--weight-bold)"
+
+Scenario: Active stop filter uses cyan capsule styling
+  Given the departures stylesheet
+  When active stop filter styles are inspected
+  Then active stop filter background equals "var(--interactive-bg-hover)"
+  And active stop filter border equals "1px solid var(--interactive-border-hover)"
+  And active stop filter text color equals "var(--interactive-text)"
+  And active stop filter text weight equals "var(--weight-semibold)"
 `;
 
 function getRuleBody(css, selector) {
@@ -43,6 +51,10 @@ defineFeature(test, featureText, {
     activeDestinationBackground: null,
     activeDestinationBorder: null,
     activeDestinationWeight: null,
+    activeStopBackground: null,
+    activeStopBorder: null,
+    activeStopColor: null,
+    activeStopWeight: null,
   }),
   stepDefinitions: [
     {
@@ -70,6 +82,16 @@ defineFeature(test, featureText, {
         world.activeDestinationBackground = getDeclarationValue(activeDestinationRule, "background");
         world.activeDestinationBorder = getDeclarationValue(activeDestinationRule, "border");
         world.activeDestinationWeight = getDeclarationValue(activeDestinationRule, "font-weight");
+      },
+    },
+    {
+      pattern: /^When active stop filter styles are inspected$/,
+      run: ({ world }) => {
+        const activeStopRule = getRuleBody(world.css, ".track.result-filter-trigger.is-active");
+        world.activeStopBackground = getDeclarationValue(activeStopRule, "background");
+        world.activeStopBorder = getDeclarationValue(activeStopRule, "border");
+        world.activeStopColor = getDeclarationValue(activeStopRule, "color");
+        world.activeStopWeight = getDeclarationValue(activeStopRule, "font-weight");
       },
     },
     {
@@ -106,6 +128,30 @@ defineFeature(test, featureText, {
       pattern: /^Then active destination filter text weight equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.activeDestinationWeight, args[0]);
+      },
+    },
+    {
+      pattern: /^Then active stop filter background equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.activeStopBackground, args[0]);
+      },
+    },
+    {
+      pattern: /^Then active stop filter border equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.activeStopBorder, args[0]);
+      },
+    },
+    {
+      pattern: /^Then active stop filter text color equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.activeStopColor, args[0]);
+      },
+    },
+    {
+      pattern: /^Then active stop filter text weight equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.activeStopWeight, args[0]);
       },
     },
   ],
