@@ -201,12 +201,38 @@ Scenario: Reject non-plain object payload sanitization
   Given a non-object payload value
   When payload sanitization runs
   Then payload sanitization result is null
+
+Scenario: Sanitize unsupported context values into safe strings
+  Given a symbol context payload
+  When context sanitization runs
+  Then sanitized context equals "Symbol(client)"
+
+Scenario: Reject oversized raw payload parsing
+  Given an oversized raw payload string
+  When raw payload parsing runs
+  Then raw payload parsing throws "Payload too large"
+
+Scenario: Return request body object payload directly
+  Given a request body object payload
+  When request payload parsing runs
+  Then parsed request payload message equals "Boom"
+
+Scenario: Reject null payload validation
+  Given a null payload value
+  When payload validation runs
+  Then payload validation error equals "Invalid payload"
+
+Scenario: Reject payloads that exceed body limit after sanitization
+  Given a payload that expands after sanitization
+  When payload validation runs
+  Then payload validation error equals "Payload too large"
 `;
 
 defineFeature(test, helperFeatureText, {
   createWorld: () => ({
     input: {},
     output: null,
+    error: null,
   }),
   stepDefinitions: [
     {
@@ -267,15 +293,113 @@ defineFeature(test, helperFeatureText, {
       },
     },
     {
+      pattern: /^Given a symbol context payload$/,
+      run: ({ world }) => {
+        world.input.context = Symbol("client");
+      },
+    },
+    {
+      pattern: /^Given an oversized raw payload string$/,
+      run: ({ world }) => {
+        world.input.rawPayload = "x".repeat(9000);
+      },
+    },
+    {
+      pattern: /^Given a request body object payload$/,
+      run: ({ world }) => {
+        world.input.request = {
+          body: {
+            type: "client-error",
+            message: "Boom",
+          },
+        };
+      },
+    },
+    {
+      pattern: /^Given a null payload value$/,
+      run: ({ world }) => {
+        world.input.payload = null;
+      },
+    },
+    {
+      pattern: /^Given a payload that expands after sanitization$/,
+      run: ({ world }) => {
+        const largeContext = {};
+        for (let i = 0; i < 30; i += 1) {
+          largeContext[`key_${i}_${"z".repeat(80)}`] = "x".repeat(400);
+        }
+        world.input.payload = {
+          type: "client-error-type-that-will-be-trimmed".repeat(4),
+          message: "message".repeat(200),
+          stack: "stack".repeat(500),
+          url: "https://example.com/path/".repeat(40),
+          userAgent: "agent".repeat(120),
+          timestamp: "2026-02-28T00:00:00.000Z".repeat(5),
+          context: largeContext,
+          toJSON() {
+            return { small: true };
+          },
+        };
+      },
+    },
+    {
       pattern: /^When payload sanitization runs$/,
       run: ({ world }) => {
         world.output = helpers.sanitizePayload(world.input.payload);
       },
     },
     {
+      pattern: /^When raw payload parsing runs$/,
+      run: ({ world }) => {
+        world.error = null;
+        world.output = null;
+        try {
+          world.output = helpers.parseRawPayload(world.input.rawPayload);
+        } catch (error) {
+          world.error = error;
+        }
+      },
+    },
+    {
+      pattern: /^When request payload parsing runs$/,
+      run: async ({ world }) => {
+        world.output = await helpers.parseRequestPayload(world.input.request);
+      },
+    },
+    {
+      pattern: /^When payload validation runs$/,
+      run: ({ world }) => {
+        world.output = helpers.validateSanitizedPayload(world.input.payload);
+      },
+    },
+    {
       pattern: /^Then payload sanitization result is null$/,
       run: ({ assert, world }) => {
         assert.equal(world.output, null);
+      },
+    },
+    {
+      pattern: /^Then sanitized context equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output, args[0]);
+      },
+    },
+    {
+      pattern: /^Then raw payload parsing throws "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.error?.message, args[0]);
+      },
+    },
+    {
+      pattern: /^Then parsed request payload message equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.message, args[0]);
+      },
+    },
+    {
+      pattern: /^Then payload validation error equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.error, args[0]);
       },
     },
   ],

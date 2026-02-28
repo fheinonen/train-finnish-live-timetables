@@ -143,6 +143,8 @@ defineFeature(test, featureText, {
     css: "",
     html: "",
     summaryClasses: null,
+    skeletonTokens: null,
+    resultsLimitControl: null,
   }),
   stepDefinitions: [
     {
@@ -247,18 +249,23 @@ defineFeature(test, featureText, {
     },
     {
       pattern: /^When skeleton tokens are inspected$/,
-      run: () => {},
+      run: ({ world }) => {
+        world.skeletonTokens = {
+          hasBase: /--skeleton-base:/.test(world.css),
+          hasShine: /--skeleton-shine:/.test(world.css),
+        };
+      },
     },
     {
       pattern: /^Then the stylesheet contains a --skeleton-base override$/,
       run: ({ assert, world }) => {
-        assert.match(world.css, /--skeleton-base:/);
+        assert.equal(world.skeletonTokens?.hasBase, true);
       },
     },
     {
       pattern: /^Then the stylesheet contains a --skeleton-shine override$/,
       run: ({ assert, world }) => {
-        assert.match(world.css, /--skeleton-shine:/);
+        assert.equal(world.skeletonTokens?.hasShine, true);
       },
     },
     {
@@ -269,18 +276,23 @@ defineFeature(test, featureText, {
     },
     {
       pattern: /^When the results limit control is inspected$/,
-      run: () => {},
+      run: ({ world }) => {
+        world.resultsLimitControl = {
+          hasNativeSelect: /<select[^>]*id="resultsLimitSelect"/.test(world.html),
+          hasCombobox: /id="resultsLimitSelect"[^>]*role="combobox"/.test(world.html),
+        };
+      },
     },
     {
       pattern: /^Then no native select element exists for results limit$/,
       run: ({ assert, world }) => {
-        assert.doesNotMatch(world.html, /<select[^>]*id="resultsLimitSelect"/);
+        assert.equal(world.resultsLimitControl?.hasNativeSelect, false);
       },
     },
     {
       pattern: /^Then a combobox trigger exists for results limit$/,
       run: ({ assert, world }) => {
-        assert.match(world.html, /id="resultsLimitSelect"[^>]*role="combobox"/);
+        assert.equal(world.resultsLimitControl?.hasCombobox, true);
       },
     },
   ],

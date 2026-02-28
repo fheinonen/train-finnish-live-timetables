@@ -441,6 +441,107 @@ async function filterHslValidCandidates(
   return validCandidates;
 }
 
+function parseGeocodeRequest(query) {
+  const text = safeString(query.text, MAX_QUERY_LENGTH).trim();
+  if (text.length < MIN_QUERY_LENGTH) {
+    return { error: "Invalid text", params: null };
+  }
+
+  const rawLat = parseCoordinate(query.lat);
+  const rawLon = parseCoordinate(query.lon);
+  const hasBias = rawLat != null || rawLon != null;
+  if (hasBias && (rawLat == null || rawLon == null || !isValidLatLon(rawLat, rawLon))) {
+    return { error: "Invalid lat/lon", params: null };
+  }
+
+  return {
+    error: null,
+    params: {
+      text,
+      biasLat: hasBias ? rawLat : DEFAULT_BIAS_LAT,
+      biasLon: hasBias ? rawLon : DEFAULT_BIAS_LON,
+      lang: normalizeLanguage(query.lang),
+      textVariants: buildGeocodeTextVariants(text),
+    },
+  };
+}
+
+async function collectGeocodeCandidates({
+  textVariants,
+  biasLat,
+  biasLon,
+  lang,
+  fetchImpl,
+  getApiKey,
+}) {
+  const allCandidates = [];
+
+  for (let variantIndex = 0; variantIndex < textVariants.length; variantIndex += 1) {
+    const variant = textVariants[variantIndex];
+    const candidates = await geocode(variant, biasLat, biasLon, lang, {
+      fetchImpl,
+      getApiKey,
+    });
+    for (const candidate of candidates) {
+      allCandidates.push({
+        ...candidate,
+        variantIndex,
+        queryVariant: variant,
+      });
+    }
+  }
+
+  return allCandidates;
+}
+
+async function resolveGeocodeMatch({
+  text,
+  textVariants,
+  biasLat,
+  biasLon,
+  lang,
+  fetchImpl,
+  graphqlRequestImpl,
+  getApiKey,
+}) {
+  const allCandidates = await collectGeocodeCandidates({
+    textVariants,
+    biasLat,
+    biasLon,
+    lang,
+    fetchImpl,
+    getApiKey,
+  });
+
+  const validCandidates = await filterHslValidCandidates(allCandidates, {
+    hasNearbyStop: (lat, lon) =>
+      hasNearbyHslStop(lat, lon, {
+        graphqlRequestImpl,
+      }),
+  });
+
+  const rankedCandidates = rankCandidatesForQuery(validCandidates, text);
+  const bestMatch = rankedCandidates[0] || null;
+  const location = bestMatch ? buildLocationPayload(bestMatch.candidate) : null;
+  const choices = buildAmbiguousChoices(rankedCandidates);
+
+  return {
+    location,
+    choices,
+    ambiguous: choices.length > 1,
+  };
+}
+
+function buildNoMatchPayload(text) {
+  return {
+    query: text,
+    location: null,
+    choices: [],
+    ambiguous: false,
+    message: "No matching location found in HSL area.",
+  };
+}
+
 function createGeocodeHandler({
   fetchImpl = fetch,
   graphqlRequestImpl = graphqlRequest,
@@ -455,68 +556,34 @@ function createGeocodeHandler({
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const text = safeString(req.query.text, MAX_QUERY_LENGTH).trim();
-    if (text.length < MIN_QUERY_LENGTH) {
-      return res.status(400).json({ error: "Invalid text" });
+    const parsedRequest = parseGeocodeRequest(req.query);
+    if (parsedRequest.error) {
+      return res.status(400).json({ error: parsedRequest.error });
     }
 
-    const rawLat = parseCoordinate(req.query.lat);
-    const rawLon = parseCoordinate(req.query.lon);
-    const hasBias = rawLat != null || rawLon != null;
-
-    if (hasBias && (rawLat == null || rawLon == null || !isValidLatLon(rawLat, rawLon))) {
-      return res.status(400).json({ error: "Invalid lat/lon" });
-    }
-
-    const biasLat = hasBias ? rawLat : DEFAULT_BIAS_LAT;
-    const biasLon = hasBias ? rawLon : DEFAULT_BIAS_LON;
-    const lang = normalizeLanguage(req.query.lang);
-    const textVariants = buildGeocodeTextVariants(text);
+    const { text, biasLat, biasLon, lang, textVariants } = parsedRequest.params;
 
     try {
-      const allCandidates = [];
-      for (let variantIndex = 0; variantIndex < textVariants.length; variantIndex += 1) {
-        const variant = textVariants[variantIndex];
-        const candidates = await geocode(variant, biasLat, biasLon, lang, {
-          fetchImpl,
-          getApiKey,
-        });
-        for (const candidate of candidates) {
-          allCandidates.push({
-            ...candidate,
-            variantIndex,
-            queryVariant: variant,
-          });
-        }
-      }
-
-      const validCandidates = await filterHslValidCandidates(allCandidates, {
-        hasNearbyStop: (lat, lon) =>
-          hasNearbyHslStop(lat, lon, {
-            graphqlRequestImpl,
-          }),
+      const match = await resolveGeocodeMatch({
+        text,
+        textVariants,
+        biasLat,
+        biasLon,
+        lang,
+        fetchImpl,
+        graphqlRequestImpl,
+        getApiKey,
       });
-      const rankedCandidates = rankCandidatesForQuery(validCandidates, text);
-      const bestMatch = rankedCandidates[0] || null;
-      const location = bestMatch ? buildLocationPayload(bestMatch.candidate) : null;
-      const choices = buildAmbiguousChoices(rankedCandidates);
-      const ambiguous = choices.length > 1;
 
-      if (!location) {
-        return res.status(200).json({
-          query: text,
-          location: null,
-          choices: [],
-          ambiguous: false,
-          message: "No matching location found in HSL area.",
-        });
+      if (!match.location) {
+        return res.status(200).json(buildNoMatchPayload(text));
       }
 
       return res.status(200).json({
         query: text,
-        location,
-        choices,
-        ambiguous,
+        location: match.location,
+        choices: match.choices,
+        ambiguous: match.ambiguous,
       });
     } catch (error) {
       // Keep detailed error only in server logs; avoid leaking internals to clients.
@@ -539,6 +606,10 @@ module.exports._private = {
   geocode,
   hasNearbyHslStop,
   filterHslValidCandidates,
+  parseGeocodeRequest,
+  collectGeocodeCandidates,
+  resolveGeocodeMatch,
+  buildNoMatchPayload,
   createGeocodeHandler,
   buildGeocodeTextVariants,
   normalizeForMatch,

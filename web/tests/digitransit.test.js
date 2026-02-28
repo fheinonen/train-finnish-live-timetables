@@ -33,8 +33,19 @@ Scenario: Reject invalid multi-stop departures limit
   When the multi-stop query is built
   Then building the multi-stop query throws "buildMultiStopDeparturesQuery requires a positive integer departures limit"
 
+Scenario: Reject non-integer multi-stop departures limit
+  Given a multi-stop query input with ids "HSL:1" and non-integer departures "1.5"
+  When the multi-stop query is built
+  Then building the multi-stop query throws "buildMultiStopDeparturesQuery requires a positive integer departures limit"
+
 Scenario: Build deduplicated multi-stop GraphQL query metadata
   Given a multi-stop query input with ids "HSL:1|HSL:1|HSL:2" and departures 8
+  When the multi-stop query is built
+  Then multi-stop query aliases equal "s0|s1"
+  And multi-stop query variables include id0 "HSL:1" and id1 "HSL:2"
+
+Scenario: Build multi-stop query after trimming blank stop ids
+  Given a multi-stop query input with ids " HSL:1 | | HSL:2 " and departures 8
   When the multi-stop query is built
   Then multi-stop query aliases equal "s0|s1"
   And multi-stop query variables include id0 "HSL:1" and id1 "HSL:2"
@@ -48,6 +59,11 @@ Scenario: Convert aborted fetch errors into timeout messages
   Given graphql runtime where fetch aborts
   When graphql request is executed
   Then graphql request throws "Digitransit request timed out"
+
+Scenario: Re-throw non-abort fetch failures
+  Given graphql runtime where fetch fails with "network down"
+  When graphql request is executed
+  Then graphql request throws "network down"
 
 Scenario: Reject invalid JSON response payloads
   Given graphql runtime where JSON parsing fails
@@ -63,6 +79,11 @@ Scenario: Reject GraphQL errors in successful HTTP responses
   Given graphql runtime with GraphQL error message "upstream failed"
   When graphql request is executed
   Then graphql request throws "upstream failed"
+
+Scenario: Allow empty GraphQL error arrays
+  Given graphql runtime with empty GraphQL errors list
+  When graphql request is executed
+  Then graphql request returns data with key "ok"
 
 Scenario: Return GraphQL data for successful responses
   Given graphql runtime with successful data payload
@@ -86,6 +107,13 @@ defineFeature(test, featureText, {
     },
     {
       pattern: /^Given a multi-stop query input with ids "([^"]*)" and departures (\d+)$/,
+      run: ({ args, world }) => {
+        world.input.stopIds = args[0].split("|");
+        world.input.departures = Number(args[1]);
+      },
+    },
+    {
+      pattern: /^Given a multi-stop query input with ids "([^"]*)" and non-integer departures "([^"]*)"$/,
       run: ({ args, world }) => {
         world.input.stopIds = args[0].split("|");
         world.input.departures = Number(args[1]);
@@ -145,6 +173,15 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^Given graphql runtime where fetch fails with "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.apiKey = "test-key";
+        world.input.fetchImpl = async () => {
+          throw new Error(args[0]);
+        };
+      },
+    },
+    {
       pattern: /^Given graphql runtime where JSON parsing fails$/,
       run: ({ world }) => {
         world.input.apiKey = "test-key";
@@ -180,6 +217,22 @@ defineFeature(test, featureText, {
           async json() {
             return {
               errors: [{ message: args[0] }],
+            };
+          },
+        });
+      },
+    },
+    {
+      pattern: /^Given graphql runtime with empty GraphQL errors list$/,
+      run: ({ world }) => {
+        world.input.apiKey = "test-key";
+        world.input.fetchImpl = async () => ({
+          ok: true,
+          status: 200,
+          async json() {
+            return {
+              data: { ok: true },
+              errors: [],
             };
           },
         });

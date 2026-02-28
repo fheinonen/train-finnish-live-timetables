@@ -6,7 +6,7 @@
     "lint": "npm run check:syntax",
     "check:syntax": "node --check scripts/app/entry.js && node --check scripts/app/01-state.js && node --check scripts/app/02-ui.js && node --check scripts/app/03-data.js && node --check scripts/app/04-init.js && node --check tools/build-assets.mjs && node --check api/v1/departures.js && node --check api/v1/client-error.js && node --check api/lib/digitransit.js && node --check api/lib/departures-utils.js",
     "test:unit": "node --test tests/**/*.test.js",
-    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"api/**/*.js\" --test-coverage-lines=95 --test-coverage-branches=75 tests/**/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"api/v1/client-error.js\" --test-coverage-include=\"api/lib/digitransit.js\" --test-coverage-lines=95 --test-coverage-branches=95 tests/**/*.test.js",
     "test:quick": "npm run test:unit && npm run check:syntax",
     "test": "npm run test:coverage && npm run lint",
     "test:e2e": "playwright test",

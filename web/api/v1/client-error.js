@@ -94,50 +94,73 @@ function readBody(req) {
   });
 }
 
+function errorResponse(res, status, message) {
+  return res.status(status).json({ error: message });
+}
+
+function parseRawPayload(raw) {
+  if (!raw) return null;
+  if (Buffer.byteLength(raw, "utf8") > MAX_BODY_SIZE) {
+    throw new Error("Payload too large");
+  }
+  return JSON.parse(raw);
+}
+
+async function parseRequestPayload(req) {
+  const body = req.body;
+  if (body && typeof body !== "string") {
+    return body;
+  }
+
+  const raw = typeof body === "string" ? body : await readBody(req);
+  return parseRawPayload(raw);
+}
+
+function validateSanitizedPayload(payload) {
+  if (payload == null) {
+    return { status: 400, error: "Invalid payload", sanitized: null };
+  }
+
+  if (getPayloadByteSize(payload) > MAX_BODY_SIZE) {
+    return { status: 413, error: "Payload too large", sanitized: null };
+  }
+
+  const sanitized = sanitizePayload(payload);
+  if (!sanitized) {
+    return { status: 400, error: "Invalid payload", sanitized: null };
+  }
+
+  if (getPayloadByteSize(sanitized) > MAX_BODY_SIZE) {
+    return { status: 413, error: "Payload too large", sanitized: null };
+  }
+
+  return { status: null, error: null, sanitized };
+}
+
 function createClientErrorHandler({ logError = console.error } = {}) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
 
     if (req.method !== "POST") {
       res.setHeader("Allow", "POST");
-      return res.status(405).json({ error: "Method not allowed" });
+      return errorResponse(res, 405, "Method not allowed");
     }
 
     try {
-      let payload = req.body;
-
-      if (!payload || typeof payload === "string") {
-        const raw = typeof payload === "string" ? payload : await readBody(req);
-        if (!raw) {
-          return res.status(400).json({ error: "Invalid payload" });
-        }
-        if (Buffer.byteLength(raw, "utf8") > MAX_BODY_SIZE) {
-          return res.status(413).json({ error: "Payload too large" });
-        }
-        payload = JSON.parse(raw);
+      const payload = await parseRequestPayload(req);
+      const validation = validateSanitizedPayload(payload);
+      if (validation.error) {
+        return errorResponse(res, validation.status, validation.error);
       }
 
-      if (getPayloadByteSize(payload) > MAX_BODY_SIZE) {
-        return res.status(413).json({ error: "Payload too large" });
-      }
-
-      const sanitized = sanitizePayload(payload);
-      if (!sanitized) {
-        return res.status(400).json({ error: "Invalid payload" });
-      }
-
-      if (getPayloadByteSize(sanitized) > MAX_BODY_SIZE) {
-        return res.status(413).json({ error: "Payload too large" });
-      }
-
-      logError("client error report:", sanitized);
+      logError("client error report:", validation.sanitized);
       return res.status(204).end();
     } catch (error) {
       if (error?.message === "Payload too large") {
-        return res.status(413).json({ error: "Payload too large" });
+        return errorResponse(res, 413, "Payload too large");
       }
       logError("client error report failed:", error);
-      return res.status(400).json({ error: "Invalid payload" });
+      return errorResponse(res, 400, "Invalid payload");
     }
   };
 }
@@ -152,5 +175,9 @@ module.exports._private = {
   getPayloadByteSize,
   sanitizePayload,
   readBody,
+  errorResponse,
+  parseRawPayload,
+  parseRequestPayload,
+  validateSanitizedPayload,
   createClientErrorHandler,
 };

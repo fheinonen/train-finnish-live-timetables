@@ -87,6 +87,9 @@ defineFeature(test, featureText, {
     lineCount: 0,
     destinationCount: 0,
     actual: null,
+    controls: null,
+    departureLayout: null,
+    typographyTokens: null,
   }),
   stepDefinitions: [
     {
@@ -97,43 +100,54 @@ defineFeature(test, featureText, {
     },
     {
       pattern: /^When stop controls are inspected$/,
-      run: () => {},
+      run: ({ world }) => {
+        const summaryMatch = world.html.match(/id="stopFilterSummary"[^>]*>([^<]+)</);
+        world.controls = {
+          hasToggle: /id="stopFiltersToggleBtn"/.test(world.html),
+          hasCollapsedPanel: /id="stopFiltersPanel"[^>]*class="[^"]*hidden/.test(world.html),
+          summary: summaryMatch ? summaryMatch[1].trim() : null,
+        };
+      },
     },
     {
       pattern: /^Then a stop filter toggle action exists$/,
       run: ({ assert, world }) => {
-        assert.match(world.html, /id="stopFiltersToggleBtn"/);
+        assert.equal(world.controls?.hasToggle, true);
       },
     },
     {
       pattern: /^Then the stop filter panel is collapsed by default$/,
       run: ({ assert, world }) => {
-        assert.match(world.html, /id="stopFiltersPanel"[^>]*class="[^"]*hidden/);
+        assert.equal(world.controls?.hasCollapsedPanel, true);
       },
     },
     {
       pattern: /^Then the stop filter summary says "([^"]*)"$/,
       run: ({ assert, args, world }) => {
-        const summaryMatch = world.html.match(/id="stopFilterSummary"[^>]*>([^<]+)</);
-        assert.ok(summaryMatch, "Expected stop filter summary element");
-        assert.equal(summaryMatch[1].trim(), args[0]);
+        assert.ok(world.controls, "Expected stop controls to be inspected");
+        assert.equal(world.controls.summary, args[0]);
       },
     },
     {
       pattern: /^When the departure presentation is inspected$/,
-      run: () => {},
+      run: ({ world }) => {
+        world.departureLayout = {
+          nextSummaryPosition: world.html.indexOf('id="nextSummary"'),
+          departuresPosition: world.html.indexOf('id="departures"'),
+          nextSummaryClass: /id="nextSummary"[^>]*class="([^"]*)"/.exec(world.html)?.[1] || "",
+        };
+      },
     },
     {
       pattern: /^Then the next departure card has a hero style hook$/,
       run: ({ assert, world }) => {
-        assert.match(world.html, /id="nextSummary"[^>]*class="[^"]*next-hero/);
+        assert.match(world.departureLayout.nextSummaryClass, /next-hero/);
       },
     },
     {
       pattern: /^Then the departures list appears after the next departure card$/,
       run: ({ assert, world }) => {
-        const nextSummaryPosition = world.html.indexOf('id="nextSummary"');
-        const departuresPosition = world.html.indexOf('id="departures"');
+        const { nextSummaryPosition, departuresPosition } = world.departureLayout;
         assert.ok(nextSummaryPosition >= 0, "Expected next summary section");
         assert.ok(departuresPosition >= 0, "Expected departures list");
         assert.ok(departuresPosition > nextSummaryPosition, "Expected departures list after next summary");
@@ -147,22 +161,25 @@ defineFeature(test, featureText, {
     },
     {
       pattern: /^When typography tokens are inspected$/,
-      run: () => {},
+      run: ({ world }) => {
+        world.typographyTokens = {
+          display: world.css.match(/--font-display:\s*"([^"]+)"/)?.[1] || null,
+          body: world.css.match(/--font-body:\s*"([^"]+)"/)?.[1] || null,
+        };
+      },
     },
     {
       pattern: /^Then the display font token equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
-        const match = world.css.match(/--font-display:\s*"([^"]+)"/);
-        assert.ok(match, "Expected display font token");
-        assert.equal(match[1], args[0]);
+        assert.ok(world.typographyTokens?.display, "Expected display font token");
+        assert.equal(world.typographyTokens.display, args[0]);
       },
     },
     {
       pattern: /^Then the body font token equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
-        const match = world.css.match(/--font-body:\s*"([^"]+)"/);
-        assert.ok(match, "Expected body font token");
-        assert.equal(match[1], args[0]);
+        assert.ok(world.typographyTokens?.body, "Expected body font token");
+        assert.equal(world.typographyTokens.body, args[0]);
       },
     },
     {

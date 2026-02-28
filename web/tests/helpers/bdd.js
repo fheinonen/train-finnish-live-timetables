@@ -124,16 +124,28 @@ function resolveStep(step, stepDefinitions) {
   return matches[0];
 }
 
-async function executeScenario({ scenario, stepDefinitions, world, probeStepIndex = -1 }) {
-  for (let index = 0; index < scenario.steps.length; index += 1) {
-    if (index === probeStepIndex) {
-      throw new Error(FAIL_FIRST_PROBE_ERROR);
-    }
+function createFailFirstProbeAssert() {
+  const fail = () => {
+    throw new Error(FAIL_FIRST_PROBE_ERROR);
+  };
 
+  let proxy = null;
+  proxy = new Proxy(fail, {
+    apply: () => fail(),
+    get: (_, property) => {
+      if (property === "strict") return proxy;
+      return fail;
+    },
+  });
+  return proxy;
+}
+
+async function executeScenario({ scenario, stepDefinitions, world, assertionApi = assert }) {
+  for (let index = 0; index < scenario.steps.length; index += 1) {
     const step = scenario.steps[index];
     const match = resolveStep(step, stepDefinitions);
     await match.definition.run({
-      assert,
+      assert: assertionApi,
       args: match.args,
       scenario,
       step,
@@ -143,15 +155,21 @@ async function executeScenario({ scenario, stepDefinitions, world, probeStepInde
 }
 
 async function assertFailFirstProbe({ scenario, stepDefinitions, createWorld }) {
-  await assert.rejects(
-    executeScenario({
+  try {
+    await executeScenario({
       scenario,
       stepDefinitions,
       world: createWorld(),
-      probeStepIndex: scenario.steps.length - 1,
-    }),
-    (error) => error?.message === FAIL_FIRST_PROBE_ERROR
-  );
+      assertionApi: createFailFirstProbeAssert(),
+    });
+  } catch (error) {
+    if (error?.message === FAIL_FIRST_PROBE_ERROR) {
+      return;
+    }
+    throw error;
+  }
+
+  throw new Error(`Fail-first probe did not hit any assertions in scenario "${scenario.name}"`);
 }
 
 function defineFeature(test, featureText, { createWorld, stepDefinitions, failFirstProbe = true } = {}) {

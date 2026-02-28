@@ -53,6 +53,7 @@ function extractTokenValue(css, tokenName) {
 defineFeature(test, featureText, {
   createWorld: () => ({
     css: "",
+    inspectTokens: null,
   }),
   stepDefinitions: [
     {
@@ -63,12 +64,14 @@ defineFeature(test, featureText, {
     },
     {
       pattern: /^When (?:spacing|typography|motion|surface) tokens are inspected$/,
-      run: () => {},
+      run: ({ world }) => {
+        world.inspectTokens = (tokenName) => extractTokenValue(world.css, tokenName);
+      },
     },
     {
       pattern: /^Then token (--[\w-]+) equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
-        const value = extractTokenValue(world.css, args[0]);
+        const value = world.inspectTokens(args[0]);
         assert.ok(value !== null, `Expected token ${args[0]} to exist`);
         assert.equal(value, args[1]);
       },
