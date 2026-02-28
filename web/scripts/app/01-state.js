@@ -93,6 +93,7 @@
     mode: MODE_RAIL,
     helsinkiOnly: false,
     busStopId: null,
+    busStopMemberFilterId: null,
     busLineFilters: [],
     busDestinationFilters: [],
     stopFilterPinned: false,

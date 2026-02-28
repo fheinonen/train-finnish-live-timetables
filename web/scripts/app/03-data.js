@@ -122,6 +122,7 @@
       state.busLineFilters = [];
       state.busDestinationFilters = [];
       state.stopFilterPinned = false;
+      state.busStopMemberFilterId = null;
     }
 
     state.hasCompletedInitialStopModeLoad = true;
@@ -129,6 +130,19 @@
     const departures = Array.isArray(responseData?.station?.departures)
       ? responseData.station.departures
       : [];
+    const availableDepartureStopIds = new Set(
+      departures
+        .map((departure) => String(departure?.stopId || "").trim())
+        .filter(Boolean)
+    );
+    if (!state.stopFilterPinned) {
+      state.busStopMemberFilterId = null;
+    } else if (
+      state.busStopMemberFilterId &&
+      !availableDepartureStopIds.has(String(state.busStopMemberFilterId).trim())
+    ) {
+      state.busStopMemberFilterId = null;
+    }
     state.busFilterOptions = buildFilterOptionsFromDepartures(departures);
     api.sanitizeStopSelections();
   }

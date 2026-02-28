@@ -70,6 +70,7 @@
 
     const lineFilterSet = new Set(state.busLineFilters);
     const destinationFilterSet = new Set(state.busDestinationFilters);
+    const stopMemberFilterId = String(state.busStopMemberFilterId || "").trim();
 
     return departures
       .filter((departure) => {
@@ -81,6 +82,11 @@
         if (destinationFilterSet.size === 0) return true;
         const destination = String(departure?.destination || "").trim();
         return destinationFilterSet.has(destination);
+      })
+      .filter((departure) => {
+        if (!stopMemberFilterId) return true;
+        const departureStopId = String(departure?.stopId || "").trim();
+        return departureStopId === stopMemberFilterId;
       });
   }
 
@@ -220,7 +226,7 @@
 
   function hasActiveStopFilter() {
     if (!isStopMode()) return false;
-    return Boolean(state.stopFilterPinned);
+    return Boolean(state.stopFilterPinned || String(state.busStopMemberFilterId || "").trim());
   }
 
   function clearStopFilterAttention() {
@@ -494,7 +500,12 @@
       ...getStopCodes(getStopMeta(state.busStopId)),
     ]);
     const stopIdsScope = selectedStopCodes.join(", ");
-    const stopScope = hasActiveStopFilter() ? "custom stop selected" : "nearest stop";
+    const activeMemberStopId = String(state.busStopMemberFilterId || "").trim();
+    const stopScope = activeMemberStopId
+      ? `stop id ${activeMemberStopId}`
+      : state.stopFilterPinned
+        ? "custom stop selected"
+        : "nearest stop";
     const lineScope =
       state.busLineFilters.length === 0
         ? "all lines"
@@ -561,6 +572,7 @@
 
     state.busStopId = stopId;
     state.stopFilterPinned = true;
+    state.busStopMemberFilterId = null;
     toggleStopDropdown(false);
 
     if (dom.busStopSelectLabelEl) {
@@ -582,35 +594,59 @@
     return state.busStops[0]?.id || null;
   }
 
-  function toggleStopFromResultCard(stopId) {
+  function isStopTargetActive(selectableStopId, memberStopId = null) {
+    const normalizedSelectableStopId = String(selectableStopId || "").trim();
+    if (!normalizedSelectableStopId || !state.stopFilterPinned) return false;
+    const currentStopId = String(state.busStopId || "").trim();
+    if (currentStopId !== normalizedSelectableStopId) return false;
+
+    const currentMemberStopId = String(state.busStopMemberFilterId || "").trim();
+    const normalizedMemberStopId = String(memberStopId || "").trim();
+    if (normalizedMemberStopId) {
+      return currentMemberStopId === normalizedMemberStopId;
+    }
+    return !currentMemberStopId;
+  }
+
+  function toggleStopFromResultCard(stopId, memberStopId = null) {
     if (!isStopMode()) return false;
-    const normalizedStopId = String(stopId || "").trim();
-    if (!normalizedStopId) return false;
+    const normalizedStopId = String(stopId || "").trim() || null;
+    const normalizedMemberStopId = String(memberStopId || "").trim() || null;
 
     const currentStopId = String(state.busStopId || "").trim() || null;
+    const currentMemberStopId = String(state.busStopMemberFilterId || "").trim() || null;
     const nearestStopId = getNearestStopId();
+    const targetSelectableStopId = normalizedStopId || currentStopId || nearestStopId;
+    if (!targetSelectableStopId) return false;
+
     const currentPinned = Boolean(state.stopFilterPinned);
+    const isActiveTarget = isStopTargetActive(targetSelectableStopId, normalizedMemberStopId);
+
     let nextStopId = currentStopId;
     let nextPinned = currentPinned;
-    let requireLoad = false;
-
-    if (currentStopId !== normalizedStopId) {
-      nextStopId = normalizedStopId;
-      nextPinned = true;
-      requireLoad = true;
-    } else if (currentPinned) {
+    let nextMemberStopId = currentMemberStopId;
+    if (isActiveTarget) {
       nextPinned = false;
-      if (nearestStopId && nearestStopId !== currentStopId) {
-        nextStopId = nearestStopId;
-        requireLoad = true;
-      }
+      nextMemberStopId = null;
+      nextStopId = nearestStopId || targetSelectableStopId;
     } else {
+      nextStopId = targetSelectableStopId;
       nextPinned = true;
+      nextMemberStopId = normalizedMemberStopId;
+    }
+    const requireLoad = nextStopId !== currentStopId;
+
+    if (
+      nextStopId === currentStopId &&
+      nextPinned === currentPinned &&
+      nextMemberStopId === currentMemberStopId
+    ) {
+      return false;
     }
 
-    if (nextStopId === currentStopId && nextPinned === currentPinned) return false;
     state.busStopId = nextStopId;
     state.stopFilterPinned = nextPinned;
+    state.busStopMemberFilterId = nextMemberStopId;
 
     if (dom.busStopSelectLabelEl) {
       const activeStop = getStopMeta(state.busStopId);
@@ -624,16 +660,21 @@
       changeType: "result_card_stop_toggle",
       showAttention: true,
       requireLoad,
-      extraContext: { selectedStopId: state.busStopId || "" },
+      extraContext: {
+        selectedStopId: state.busStopId || "",
+        selectedMemberStopId: state.busStopMemberFilterId || "",
+      },
     });
     return true;
   }
 
-  function resolveStopIdFromDeparture(departure, station = null) {
+  function resolveStopTargetFromDeparture(departure, station = null) {
     const departureStopId = String(departure?.stopId || "").trim();
     if (departureStopId) {
       const matchedById = state.busStops.find((stop) => getStopMemberIds(stop).includes(departureStopId));
-      if (matchedById?.id) return matchedById.id;
+      if (matchedById?.id) {
+        return { selectableStopId: matchedById.id, memberStopId: departureStopId };
+      }
     }
 
     const stopCodeCandidates = api.uniqueNonEmptyStrings([
@@ -644,10 +685,19 @@
 
     for (const code of stopCodeCandidates) {
       const matchedStop = state.busStops.find((stop) => getStopCodes(stop).includes(code));
-      if (matchedStop?.id) return matchedStop.id;
+      if (matchedStop?.id) {
+        return { selectableStopId: matchedStop.id, memberStopId: departureStopId || null };
+      }
     }
 
-    return state.busStopId || getNearestStopId();
+    return {
+      selectableStopId: state.busStopId || getNearestStopId(),
+      memberStopId: departureStopId || null,
+    };
+  }
+
+  function resolveStopIdFromDeparture(departure, station = null) {
+    return resolveStopTargetFromDeparture(departure, station).selectableStopId;
   }
 
   function clearResultFilterTrigger(element) {
@@ -791,7 +841,7 @@
     if (isStopMode()) {
       const lineValue = String(nextDeparture.line || "").trim();
       const destinationValue = String(nextDeparture.destination || "").trim();
-      const stopId = resolveStopIdFromDeparture(nextDeparture, station);
+      const stopTarget = resolveStopTargetFromDeparture(nextDeparture, station);
       setResultFilterTrigger(dom.nextLineEl, {
         active: lineValue ? state.busLineFilters.includes(lineValue) : false,
         onActivate: () => toggleLineFilterFromResultCard(lineValue),
@@ -803,8 +853,9 @@
         ariaLabel: `Toggle destination filter ${destinationValue || "unknown"}`,
       });
       setResultFilterTrigger(dom.nextTrackEl, {
-        active: stopId ? state.busStopId === stopId : false,
-        onActivate: () => toggleStopFromResultCard(stopId),
+        active: isStopTargetActive(stopTarget.selectableStopId, stopTarget.memberStopId),
+        onActivate: () =>
+          toggleStopFromResultCard(stopTarget.selectableStopId, stopTarget.memberStopId),
         ariaLabel: "Toggle stop filter",
       });
     } else {
@@ -837,7 +888,11 @@
     const next = visibleDepartures[0];
     if (!next) {
       if (isStopMode()) {
-        if (state.busLineFilters.length > 0 || state.busDestinationFilters.length > 0) {
+        if (
+          state.busLineFilters.length > 0 ||
+          state.busDestinationFilters.length > 0 ||
+          hasActiveStopFilter()
+        ) {
           const servicePlural = getStopModeLabel().plural;
           return `No upcoming ${servicePlural} match selected filters.`;
         }
@@ -965,7 +1020,9 @@
       li.className = "empty-row";
       if (isStopMode()) {
         li.textContent =
-          state.busLineFilters.length > 0 || state.busDestinationFilters.length > 0
+          state.busLineFilters.length > 0 ||
+          state.busDestinationFilters.length > 0 ||
+          hasActiveStopFilter()
             ? `No upcoming ${getStopModeLabel().plural} match selected filters.`
             : "No upcoming departures from this stop.";
       } else {
@@ -1029,10 +1086,11 @@
       track.className = "track";
       if (isStopMode()) {
         track.textContent = `Stop ${buildModeStopDisplay(station, item)}`;
-        const stopId = resolveStopIdFromDeparture(item, station);
+        const stopTarget = resolveStopTargetFromDeparture(item, station);
         setResultFilterTrigger(track, {
-          active: stopId ? state.busStopId === stopId : false,
-          onActivate: () => toggleStopFromResultCard(stopId),
+          active: isStopTargetActive(stopTarget.selectableStopId, stopTarget.memberStopId),
+          onActivate: () =>
+            toggleStopFromResultCard(stopTarget.selectableStopId, stopTarget.memberStopId),
           ariaLabel: "Toggle stop filter",
         });
       } else {
@@ -1106,6 +1164,8 @@
     toggleLineFilterFromResultCard,
     toggleDestinationFilterFromResultCard,
     toggleStopFromResultCard,
+    isStopTargetActive,
+    resolveStopTargetFromDeparture,
     resolveStopIdFromDeparture,
     setResultFilterTrigger,
     clearResultFilterTrigger,

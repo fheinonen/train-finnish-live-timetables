@@ -48,7 +48,16 @@ Scenario: Real departure stop id resolves and toggles matching selectable stop
   Then resolved stop target equals "custom-stop"
   When resolved result card stop is toggled
   Then selected stop equals "custom-stop"
+  And visible departures are filtered to stop id "HSL:2002"
   And stop filter summary text equals "1 filter"
+
+Scenario: Stop code fallback keeps real departure stop id for filtering
+  Given stop mode with nearest stop "nearest-stop", alternative stop code "2001", and unresolved departure stop id "HSL:2002"
+  When result card stop target details are resolved from departure stop id
+  Then resolved stop target equals "custom-stop"
+  And resolved member stop id equals "HSL:2002"
+  When resolved stop target details are toggled
+  Then visible departures are filtered to stop id "HSL:2002"
 
 Scenario: Card tap feedback keeps panel open during lock window
   Given stop mode departures with lines "550" and "560"
@@ -158,6 +167,7 @@ function buildDepartures(values, key) {
       line: `L${index + 1}`,
       destination: `D${index + 1}`,
       departureIso: new Date(Date.now() + (index + 2) * 60000).toISOString(),
+      stopId: `HSL:${1000 + index + 1}`,
       stopCode: "1001",
       stopName: "Test stop",
     };
@@ -312,6 +322,7 @@ defineFeature(test, featureText, {
     departureForResolution: null,
     stationForResolution: null,
     resolvedStopTarget: null,
+    resolvedStopTargetDetails: null,
   }),
   stepDefinitions: [
     {
@@ -438,8 +449,26 @@ defineFeature(test, featureText, {
     {
       pattern: /^Given stop mode with nearest stop "([^"]*)", alternative stop "([^"]*)", and departure stop id "([^"]*)"$/,
       run: ({ args, world }) => {
+        const departures = [
+          {
+            line: "550",
+            destination: "Kamppi",
+            departureIso: new Date(Date.now() + 120000).toISOString(),
+            stopId: "HSL:1001",
+            stopCode: "1001",
+            stopName: "Nearest",
+          },
+          {
+            line: "550",
+            destination: "Kamppi",
+            departureIso: new Date(Date.now() + 180000).toISOString(),
+            stopId: args[2],
+            stopCode: "2001",
+            stopName: "Custom",
+          },
+        ];
         world.harness = createUiHarness({
-          departures: buildDepartures(["550", "560"], "line"),
+          departures,
           busStops: [
             {
               id: args[0],
@@ -476,15 +505,74 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern:
+        /^Given stop mode with nearest stop "([^"]*)", alternative stop code "([^"]*)", and unresolved departure stop id "([^"]*)"$/,
+      run: ({ args, world }) => {
+        const departures = [
+          {
+            line: "550",
+            destination: "Kamppi",
+            departureIso: new Date(Date.now() + 2 * 60000).toISOString(),
+            stopId: args[2],
+            stopCode: args[1],
+            stopName: "Custom",
+          },
+          {
+            line: "560",
+            destination: "Pasila",
+            departureIso: new Date(Date.now() + 4 * 60000).toISOString(),
+            stopId: "HSL:3001",
+            stopCode: args[1],
+            stopName: "Custom",
+          },
+        ];
+
+        world.harness = createUiHarness({
+          departures,
+          busStops: [
+            {
+              id: args[0],
+              name: "Nearest",
+              code: "1001",
+              stopCodes: ["1001"],
+              memberStopIds: ["HSL:1001"],
+              distanceMeters: 90,
+            },
+            {
+              id: "custom-stop",
+              name: "Custom",
+              code: args[1],
+              stopCodes: [args[1]],
+              distanceMeters: 220,
+            },
+          ],
+          busStopId: args[0],
+        });
+
+        world.departureForResolution = departures[0];
+        world.stationForResolution = {
+          stopCode: "1001",
+          stopCodes: [args[1]],
+          stopName: "Station",
+        };
+      },
+    },
+    {
       pattern: /^When result card stop "([^"]*)" is toggled$/,
       run: ({ args, world }) => {
         world.harness.app.api.toggleStopFromResultCard(args[0]);
+        world.lastVisibleDepartures = world.harness.app.api.getVisibleDepartures(
+          world.harness.app.state.latestResponse.station.departures
+        );
       },
     },
     {
       pattern: /^When result card stop "([^"]*)" is toggled again$/,
       run: ({ args, world }) => {
         world.harness.app.api.toggleStopFromResultCard(args[0]);
+        world.lastVisibleDepartures = world.harness.app.api.getVisibleDepartures(
+          world.harness.app.state.latestResponse.station.departures
+        );
       },
     },
     {
@@ -497,6 +585,16 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^When result card stop target details are resolved from departure stop id$/,
+      run: ({ world }) => {
+        world.resolvedStopTargetDetails = world.harness.app.api.resolveStopTargetFromDeparture(
+          world.departureForResolution,
+          world.stationForResolution
+        );
+        world.resolvedStopTarget = world.resolvedStopTargetDetails.selectableStopId;
+      },
+    },
+    {
       pattern: /^Then resolved stop target equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.resolvedStopTarget, args[0]);
@@ -505,7 +603,38 @@ defineFeature(test, featureText, {
     {
       pattern: /^When resolved result card stop is toggled$/,
       run: ({ world }) => {
-        world.harness.app.api.toggleStopFromResultCard(world.resolvedStopTarget);
+        world.harness.app.api.toggleStopFromResultCard(
+          world.resolvedStopTarget,
+          world.departureForResolution?.stopId
+        );
+        world.lastVisibleDepartures = world.harness.app.api.getVisibleDepartures(
+          world.harness.app.state.latestResponse.station.departures
+        );
+      },
+    },
+    {
+      pattern: /^When resolved stop target details are toggled$/,
+      run: ({ world }) => {
+        world.harness.app.api.toggleStopFromResultCard(
+          world.resolvedStopTargetDetails?.selectableStopId,
+          world.resolvedStopTargetDetails?.memberStopId
+        );
+        world.lastVisibleDepartures = world.harness.app.api.getVisibleDepartures(
+          world.harness.app.state.latestResponse.station.departures
+        );
+      },
+    },
+    {
+      pattern: /^Then resolved member stop id equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.resolvedStopTargetDetails?.memberStopId, args[0]);
+      },
+    },
+    {
+      pattern: /^Then visible departures are filtered to stop id "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.ok(world.lastVisibleDepartures.length > 0, "Expected at least one visible departure");
+        assert.equal(world.lastVisibleDepartures.every((item) => item.stopId === args[0]), true);
       },
     },
     {
