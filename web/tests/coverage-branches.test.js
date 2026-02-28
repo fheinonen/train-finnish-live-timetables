@@ -74,6 +74,73 @@ Scenario: Parse comma-separated multi query arrays
   Given multi query array values "550,551|551,M2"
   When multi query parsing executes
   Then multi query parsing output equals "550|551|M2"
+
+Scenario: Parse METRO requested mode
+  Given requested mode input "metro"
+  When requested mode parsing executes
+  Then requested mode parsing output equals "METRO"
+
+Scenario: Parse null multi query input
+  Given multi query input is null
+  When multi query parsing executes
+  Then multi query parsing output equals ""
+
+Scenario: Parse null requested result limit as default
+  Given requested result input is null and default 12
+  When requested result parsing executes
+  Then requested result parsing output equals 12
+
+Scenario: Reject out-of-range requested result limit
+  Given requested result raw value "61" and default 8
+  When requested result parsing executes
+  Then requested result parsing output is null
+
+Scenario: Normalize numeric pickup type value
+  Given pickup type numeric input 2
+  When pickup normalization executes
+  Then pickup normalization output equals 2
+
+Scenario: Reject non-integer numeric pickup type value
+  Given pickup type numeric input 2.5
+  When pickup normalization executes
+  Then pickup normalization output is null
+
+Scenario: Normalize numeric-string pickup type value
+  Given pickup type input "3"
+  When pickup normalization executes
+  Then pickup normalization output equals 3
+
+Scenario: Normalize whitespace pickup type string as unknown enum
+  Given pickup type input "   "
+  When pickup normalization executes
+  Then pickup normalization output equals 0
+
+Scenario: Boardability defaults to true when pickup type is missing
+  Given stop time without pickup type
+  When boardability helper executes
+  Then boardability helper output equals true
+
+Scenario: Parse departure with fallback track and service line name
+  Given stop time with missing line and platform and fallback track "B"
+  When departure parsing executes for mode "BUS"
+  Then parsed departure line equals "Service"
+  And parsed departure track equals "B"
+
+Scenario: Reject departure when service day is invalid
+  Given stop time with invalid service day
+  When departure parsing executes for mode "BUS"
+  Then departure parsing output is null
+
+Scenario: Reject departure when departure seconds are invalid
+  Given stop time with invalid departure seconds
+  When departure parsing executes for mode "BUS"
+  Then departure parsing output is null
+
+Scenario: Build filter options ignores blank fields and sorts ties alphabetically
+  Given departures with line tie and blank values
+  When filter options are built from helper
+  Then helper line filter options equal "A:1|B:1"
+  And helper destination filter options equal "Kamppi:1|Pasila:1"
 `;
 
 defineFeature(test, departuresUtilsFeature, {
@@ -114,6 +181,13 @@ defineFeature(test, departuresUtilsFeature, {
       },
     },
     {
+      pattern: /^Given requested result input is null and default (\d+)$/,
+      run: ({ args, world }) => {
+        world.input.raw = null;
+        world.input.defaultValue = Number(args[0]);
+      },
+    },
+    {
       pattern: /^When requested result parsing executes$/,
       run: ({ world }) => {
         world.output = departuresUtils.parseRequestedResultLimit(
@@ -141,6 +215,12 @@ defineFeature(test, departuresUtilsFeature, {
       },
     },
     {
+      pattern: /^Given pickup type numeric input (-?\d+(?:\.\d+)?)$/,
+      run: ({ args, world }) => {
+        world.input.pickup = Number(args[0]);
+      },
+    },
+    {
       pattern: /^When pickup normalization executes$/,
       run: ({ world }) => {
         world.output = departuresUtils.normalizePickDropType(world.input.pickup);
@@ -150,6 +230,30 @@ defineFeature(test, departuresUtilsFeature, {
       pattern: /^Then pickup normalization output equals (\d+)$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.output, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Then pickup normalization output is null$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.output, null);
+      },
+    },
+    {
+      pattern: /^Given stop time without pickup type$/,
+      run: ({ world }) => {
+        world.input.stopTime = {};
+      },
+    },
+    {
+      pattern: /^When boardability helper executes$/,
+      run: ({ world }) => {
+        world.output = departuresUtils.isBoardableStopTime(world.input.stopTime);
+      },
+    },
+    {
+      pattern: /^Then boardability helper output equals (true|false)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output, args[0] === "true");
       },
     },
     {
@@ -169,6 +273,60 @@ defineFeature(test, departuresUtilsFeature, {
           code: "FALL",
           name: "Fallback Stop",
         };
+        world.input.fallbackTrack = null;
+      },
+    },
+    {
+      pattern: /^Given stop time with missing line and platform and fallback track "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.stopTime = {
+          serviceDay: 1_700_000_000,
+          realtimeDeparture: 60,
+          scheduledDeparture: 60,
+          pickupType: 0,
+          headsign: "Kamppi",
+          stop: {
+            gtfsId: "HSL:1",
+            name: "Kamppi",
+            code: "1",
+            platformCode: "",
+          },
+          trip: { route: { mode: "BUS", shortName: "" } },
+        };
+        world.input.fallbackStop = null;
+        world.input.fallbackTrack = args[0];
+      },
+    },
+    {
+      pattern: /^Given stop time with invalid service day$/,
+      run: ({ world }) => {
+        world.input.stopTime = {
+          serviceDay: "bad",
+          realtimeDeparture: 60,
+          scheduledDeparture: 60,
+          pickupType: 0,
+          headsign: "Kamppi",
+          stop: { gtfsId: "HSL:1", name: "Kamppi", code: "1" },
+          trip: { route: { mode: "BUS", shortName: "550" } },
+        };
+        world.input.fallbackStop = null;
+        world.input.fallbackTrack = null;
+      },
+    },
+    {
+      pattern: /^Given stop time with invalid departure seconds$/,
+      run: ({ world }) => {
+        world.input.stopTime = {
+          serviceDay: 1_700_000_000,
+          realtimeDeparture: "nan",
+          scheduledDeparture: "nan",
+          pickupType: 0,
+          headsign: "Kamppi",
+          stop: { gtfsId: "HSL:1", name: "Kamppi", code: "1" },
+          trip: { route: { mode: "BUS", shortName: "550" } },
+        };
+        world.input.fallbackStop = null;
+        world.input.fallbackTrack = null;
       },
     },
     {
@@ -176,7 +334,7 @@ defineFeature(test, departuresUtilsFeature, {
       run: ({ args, world }) => {
         world.output = departuresUtils.parseDeparture(
           world.input.stopTime,
-          null,
+          world.input.fallbackTrack || null,
           args[0],
           world.input.fallbackStop
         );
@@ -192,6 +350,18 @@ defineFeature(test, departuresUtilsFeature, {
       pattern: /^Then parsed departure stop name equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.output.stopName, args[0]);
+      },
+    },
+    {
+      pattern: /^Then parsed departure line equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.line, args[0]);
+      },
+    },
+    {
+      pattern: /^Then parsed departure track equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.track, args[0]);
       },
     },
     {
@@ -222,6 +392,12 @@ defineFeature(test, departuresUtilsFeature, {
       },
     },
     {
+      pattern: /^Given multi query input is null$/,
+      run: ({ world }) => {
+        world.input.multi = null;
+      },
+    },
+    {
       pattern: /^When multi query parsing executes$/,
       run: ({ world }) => {
         world.output = departuresUtils.parseMultiQueryParam(world.input.multi);
@@ -231,6 +407,36 @@ defineFeature(test, departuresUtilsFeature, {
       pattern: /^Then multi query parsing output equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.output.join("|"), args[0]);
+      },
+    },
+    {
+      pattern: /^Given departures with line tie and blank values$/,
+      run: ({ world }) => {
+        world.input.departures = [
+          { line: "B", destination: "Kamppi" },
+          { line: "A", destination: "Pasila" },
+          { line: "", destination: " " },
+        ];
+      },
+    },
+    {
+      pattern: /^When filter options are built from helper$/,
+      run: ({ world }) => {
+        world.output = departuresUtils.buildFilterOptions(world.input.departures);
+      },
+    },
+    {
+      pattern: /^Then helper line filter options equal "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        const actual = world.output.lines.map((item) => `${item.value}:${item.count}`).join("|");
+        assert.equal(actual, args[0]);
+      },
+    },
+    {
+      pattern: /^Then helper destination filter options equal "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        const actual = world.output.destinations.map((item) => `${item.value}:${item.count}`).join("|");
+        assert.equal(actual, args[0]);
       },
     },
   ],
@@ -268,15 +474,85 @@ Scenario: Filter departures by selected line and destination
   When departure filters are applied
   Then filtered departure count equals 1
 
-Scenario: Build nearest rail candidate from parent station and stop
-  Given rail stops with parent station and plain stop
-  When nearest rail candidate is selected
-  Then nearest rail candidate kind equals "station"
-
 Scenario: Derive no-nearby message by stop mode
   Given transport mode "METRO"
   When no-nearby stop message is requested
   Then no-nearby stop message equals "No nearby metro stops"
+
+Scenario: Parse numeric departure coordinate inputs
+  Given departure coordinate raw value 60.17
+  When departure coordinate parsing executes
+  Then parsed departure coordinate equals 60.17
+
+Scenario: Reject out-of-range departures request coordinates
+  Given departures request query with lat "91", lon "24.93", and mode "RAIL"
+  When departures request parsing executes
+  Then departures request parsing error equals "Invalid lat/lon"
+
+Scenario: Filter and sort mode stops by mode while ignoring invalid nodes
+  Given nearby mode-stop payload with invalid entries and mixed modes
+  When mode stops are selected for mode "BUS"
+  Then selected mode stop ids equal "HSL:2|HSL:1"
+
+Scenario: Build selectable stop code fallback from grouped member codes
+  Given grouped stops where nearest member has empty code
+  When selectable stop groups are built
+  Then first selectable stop code equals "2002"
+
+Scenario: Parse invalid departure coordinate string
+  Given departure coordinate raw string "abc"
+  When departure coordinate string parsing executes
+  Then parsed departure coordinate is null
+
+Scenario: Select requested stop falls back to first available stop
+  Given selectable stop list with ids "HSL:1|HSL:2"
+  And requested stop id value "HSL:missing"
+  When requested stop selection executes
+  Then selected stop id equals "HSL:1"
+
+Scenario: Select requested stop returns null for empty stop list
+  Given selectable stop list is empty
+  And requested stop id value "HSL:any"
+  When requested stop selection executes
+  Then selected stop is null
+
+Scenario: Map selectable stop defaults missing member ids
+  Given selectable stop mapping input without member ids
+  When selectable stop mapping executes
+  Then mapped selectable stop member ids equal "HSL:solo"
+
+Scenario: Derive default result limit for non-bus mode
+  Given default result limit mode input "RAIL"
+  When default result limit helper executes
+  Then default result limit equals 8
+
+Scenario: Derive no-nearby message for tram mode
+  Given transport mode "TRAM"
+  When no-nearby stop message is requested
+  Then no-nearby stop message equals "No nearby tram stops"
+
+Scenario: Detect stop mode boolean values
+  Given stop-mode check mode input "RAIL"
+  When stop-mode check executes
+  Then stop-mode check output equals true
+
+Scenario: Translate upstream mode for metro and rail
+  Given upstream mode input "METRO"
+  When upstream mode helper executes
+  Then upstream mode output equals "SUBWAY"
+  Given upstream mode input "RAIL"
+  When upstream mode helper executes
+  Then upstream mode output equals "RAIL"
+
+Scenario: Build stop-mode response fallback when no selectable stop survives grouping
+  Given stop mode response helper input with ungrouppable stops
+  When stop mode response helper executes
+  Then stop mode fallback message equals "No nearby bus stops"
+
+Scenario: Dedupe helper returns empty list for null input
+  Given dedupe helper input is null
+  When stop departures dedupe helper executes
+  Then dedupe helper output count equals 0
 `;
 
 defineFeature(test, departuresHelpersFeature, {
@@ -437,41 +713,6 @@ defineFeature(test, departuresHelpersFeature, {
       },
     },
     {
-      pattern: /^Given rail stops with parent station and plain stop$/,
-      run: ({ world }) => {
-        world.input.modeStops = [
-          {
-            distance: 100,
-            stop: {
-              gtfsId: "HSL:STOP1",
-              name: "Stop 1",
-              parentStation: { gtfsId: "HSL:STATION", name: "Station" },
-            },
-          },
-          {
-            distance: 140,
-            stop: {
-              gtfsId: "HSL:STOP2",
-              name: "Stop 2",
-              parentStation: null,
-            },
-          },
-        ];
-      },
-    },
-    {
-      pattern: /^When nearest rail candidate is selected$/,
-      run: ({ world }) => {
-        world.output = departuresApi.getNearestRailCandidate(world.input.modeStops);
-      },
-    },
-    {
-      pattern: /^Then nearest rail candidate kind equals "([^"]*)"$/,
-      run: ({ assert, args, world }) => {
-        assert.equal(world.output.kind, args[0]);
-      },
-    },
-    {
       pattern: /^Given transport mode "([^"]*)"$/,
       run: ({ args, world }) => {
         world.input.mode = args[0];
@@ -487,6 +728,297 @@ defineFeature(test, departuresHelpersFeature, {
       pattern: /^Then no-nearby stop message equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.output, args[0]);
+      },
+    },
+    {
+      pattern: /^Given departure coordinate raw value (-?\d+(?:\.\d+)?)$/,
+      run: ({ args, world }) => {
+        world.input.rawCoordinate = Number(args[0]);
+      },
+    },
+    {
+      pattern: /^When departure coordinate parsing executes$/,
+      run: ({ world }) => {
+        world.output = departuresApi.parseRequiredCoordinate(world.input.rawCoordinate);
+      },
+    },
+    {
+      pattern: /^Then parsed departure coordinate equals (-?\d+(?:\.\d+)?)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given departures request query with lat "([^"]*)", lon "([^"]*)", and mode "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.requestQuery = {
+          lat: args[0],
+          lon: args[1],
+          mode: args[2],
+        };
+      },
+    },
+    {
+      pattern: /^When departures request parsing executes$/,
+      run: ({ world }) => {
+        world.output = departuresApi.parseDeparturesRequest(world.input.requestQuery);
+      },
+    },
+    {
+      pattern: /^Then departures request parsing error equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output.error, args[0]);
+      },
+    },
+    {
+      pattern: /^Given nearby mode-stop payload with invalid entries and mixed modes$/,
+      run: ({ world }) => {
+        world.input.nearbyData = {
+          stopsByRadius: {
+            edges: [
+              { node: null },
+              {
+                node: {
+                  distance: 200,
+                  stop: { gtfsId: "HSL:rail", vehicleMode: "RAIL" },
+                },
+              },
+              {
+                node: {
+                  distance: 120,
+                  stop: { gtfsId: "HSL:1", vehicleMode: "BUS" },
+                },
+              },
+              {
+                node: {
+                  distance: 80,
+                  stop: { gtfsId: "HSL:2", vehicleMode: "BUS" },
+                },
+              },
+            ],
+          },
+        };
+      },
+    },
+    {
+      pattern: /^When mode stops are selected for mode "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.output = departuresApi.getModeStops(world.input.nearbyData, args[0]);
+      },
+    },
+    {
+      pattern: /^Then selected mode stop ids equal "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        const actual = world.output.map((item) => item.stop.gtfsId).join("|");
+        assert.equal(actual, args[0]);
+      },
+    },
+    {
+      pattern: /^Given grouped stops where nearest member has empty code$/,
+      run: ({ world }) => {
+        world.input.modeStops = [
+          {
+            distance: 90,
+            stop: { gtfsId: "HSL:far", name: "Shared Stop", code: "2002" },
+          },
+          {
+            distance: 20,
+            stop: { gtfsId: "HSL:near", name: "Shared Stop", code: "" },
+          },
+        ];
+      },
+    },
+    {
+      pattern: /^Then first selectable stop code equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.[0]?.code, args[0]);
+      },
+    },
+    {
+      pattern: /^Given departure coordinate raw string "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.rawCoordinateString = args[0];
+      },
+    },
+    {
+      pattern: /^When departure coordinate string parsing executes$/,
+      run: ({ world }) => {
+        world.output = departuresApi.parseRequiredCoordinate(world.input.rawCoordinateString);
+      },
+    },
+    {
+      pattern: /^Then parsed departure coordinate is null$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.output, null);
+      },
+    },
+    {
+      pattern: /^Given selectable stop list with ids "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.selectableStops = args[0].split("|").map((id, index) => ({
+          id,
+          name: `Stop ${index + 1}`,
+          memberStopIds: [id],
+        }));
+      },
+    },
+    {
+      pattern: /^Given selectable stop list is empty$/,
+      run: ({ world }) => {
+        world.input.selectableStops = [];
+      },
+    },
+    {
+      pattern: /^Given requested stop id value "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.requestedStopId = args[0];
+      },
+    },
+    {
+      pattern: /^When requested stop selection executes$/,
+      run: ({ world }) => {
+        world.output = departuresApi.selectRequestedStop(
+          world.input.selectableStops,
+          world.input.requestedStopId
+        );
+      },
+    },
+    {
+      pattern: /^Then selected stop id equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.id, args[0]);
+      },
+    },
+    {
+      pattern: /^Then selected stop is null$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.output, null);
+      },
+    },
+    {
+      pattern: /^Given selectable stop mapping input without member ids$/,
+      run: ({ world }) => {
+        world.input.selectableStops = [
+          {
+            id: "HSL:solo",
+            name: "Solo",
+            code: null,
+            memberStopCodes: ["S1"],
+            distance: 25,
+          },
+        ];
+      },
+    },
+    {
+      pattern: /^When selectable stop mapping executes$/,
+      run: ({ world }) => {
+        world.output = departuresApi.mapSelectableStops(world.input.selectableStops);
+      },
+    },
+    {
+      pattern: /^Given default result limit mode input "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.mode = args[0];
+      },
+    },
+    {
+      pattern: /^When default result limit helper executes$/,
+      run: ({ world }) => {
+        world.output = departuresApi.getDefaultResultLimit(world.input.mode);
+      },
+    },
+    {
+      pattern: /^Then default result limit equals (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given stop-mode check mode input "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.mode = args[0];
+      },
+    },
+    {
+      pattern: /^When stop-mode check executes$/,
+      run: ({ world }) => {
+        world.output = departuresApi.isStopMode(world.input.mode);
+      },
+    },
+    {
+      pattern: /^Then stop-mode check output equals (true|false)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output, args[0] === "true");
+      },
+    },
+    {
+      pattern: /^Given upstream mode input "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.mode = args[0];
+      },
+    },
+    {
+      pattern: /^When upstream mode helper executes$/,
+      run: ({ world }) => {
+        world.output = departuresApi.getUpstreamMode(world.input.mode);
+      },
+    },
+    {
+      pattern: /^Then upstream mode output equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output, args[0]);
+      },
+    },
+    {
+      pattern: /^Given stop mode response helper input with ungrouppable stops$/,
+      run: ({ world }) => {
+        world.input.stopModeParams = {
+          graphqlRequest: async () => {
+            throw new Error("graphqlRequest should not run when no selectable stop exists");
+          },
+          mode: "BUS",
+          upstreamMode: "BUS",
+          modeStops: [
+            {
+              distance: 10,
+              stop: { gtfsId: "HSL:1", name: "", code: "1" },
+            },
+          ],
+          requestedResultLimit: 8,
+          requestedLines: [],
+          requestedDestinations: [],
+          requestedStopId: "",
+        };
+      },
+    },
+    {
+      pattern: /^When stop mode response helper executes$/,
+      run: async ({ world }) => {
+        world.output = await departuresApi.buildStopModeResponse(world.input.stopModeParams);
+      },
+    },
+    {
+      pattern: /^Then stop mode fallback message equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.message, args[0]);
+      },
+    },
+    {
+      pattern: /^Given dedupe helper input is null$/,
+      run: ({ world }) => {
+        world.input.departures = null;
+      },
+    },
+    {
+      pattern: /^When stop departures dedupe helper executes$/,
+      run: ({ world }) => {
+        world.output = departuresApi.dedupeStopDepartures(world.input.departures);
+      },
+    },
+    {
+      pattern: /^Then dedupe helper output count equals (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output.length, Number(args[0]));
       },
     },
   ],
@@ -548,6 +1080,86 @@ Scenario: Truncate client error context arrays
   Given client error context array with 40 items
   When client error context sanitization executes
   Then sanitized context array length equals 30
+
+Scenario: Parse numeric geocode coordinate value
+  Given geocode coordinate raw value 24.93
+  When geocode coordinate parsing executes
+  Then parsed geocode coordinate equals 24.93
+
+Scenario: Normalize oversized geocode query text to maximum length
+  Given geocode query text with 180 letters "q"
+  When geocode query normalization executes
+  Then normalized geocode query text length equals 140
+
+Scenario: Score exact compact candidate match with strong boost
+  Given scoring query text "Kamppi Center" and candidate label "Kamppi Center"
+  When geocode candidate scoring executes
+  Then geocode candidate score is at least 100
+
+Scenario: Score compact-contained candidate match
+  Given scoring query text "Kamppi Center Helsinki" and candidate label "Kamppi"
+  When geocode candidate scoring executes
+  Then geocode candidate score is greater than 0
+
+Scenario: Rank tied candidates by confidence first
+  Given tied ranking candidates with confidences 0.7 and 0.9
+  When tied candidate ranking executes for query "Kamppi"
+  Then top ranked candidate confidence equals 0.9
+
+Scenario: Rank tied candidates by variant index when confidence is equal
+  Given tied ranking candidates with equal confidence and variant indexes 2 and 0
+  When tied candidate ranking executes for query "Kamppi"
+  Then top ranked candidate variant index equals 0
+
+Scenario: Rank fully identical tied candidates without dropping entries
+  Given fully identical tied ranking candidates
+  When tied candidate ranking executes for query "Kamppi"
+  Then ranked candidate count equals 2
+
+Scenario: Reject fuzzy token matches for too-short query fragments
+  Given token match query token "ka" and label token "kamppi"
+  When token matching executes
+  Then token matching output equals false
+
+Scenario: Accept token matches when label starts with query token
+  Given token match query token "kamp" and label token "kamppi"
+  When token matching executes
+  Then token matching output equals true
+
+Scenario: Accept token matches when query token contains long label token
+  Given token match query token "kamppikeskus" and label token "keskus"
+  When token matching executes
+  Then token matching output equals true
+
+Scenario: Apply missing-token penalty for unmatched strong query terms
+  Given missing-token penalty query tokens "kamppi|arena" and label tokens "kamppi|helsinki"
+  When missing-token penalty is computed
+  Then missing-token penalty is greater than 0
+
+Scenario: Count strong token matches while ignoring weak municipality tokens
+  Given strong-token counting query tokens "helsinki|kamppi" and label tokens "kamppi|helsinki"
+  When strong-token match count is computed
+  Then strong-token match count equals 1
+
+Scenario: Return no ambiguity choices when top match has zero strong tokens
+  Given ranked candidates with zero strong token matches at top
+  When ambiguity choices are built
+  Then ambiguity choice count equals 0
+
+Scenario: Clamp parsed geocode confidence into one
+  Given geocode feature with confidence 1.5
+  When geocode feature parsing executes
+  Then parsed geocode confidence equals 1
+
+Scenario: Collect candidates from multiple geocode query variants
+  Given geocode candidate collection with variants "kamppi|pasila"
+  When geocode candidate collection executes
+  Then collected geocode candidate count equals 2
+
+Scenario: Resolve geocode match returns no location when validated candidates are empty
+  Given geocode resolution input with no validated candidates
+  When geocode match resolution executes
+  Then geocode resolution has no location
 `;
 
 defineFeature(test, geocodeAndClientErrorFeature, {
@@ -573,6 +1185,42 @@ defineFeature(test, geocodeAndClientErrorFeature, {
       pattern: /^Then geocode language normalization output equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.output, args[0]);
+      },
+    },
+    {
+      pattern: /^Given geocode coordinate raw value (-?\d+(?:\.\d+)?)$/,
+      run: ({ args, world }) => {
+        world.input.geocodeCoordinateRaw = Number(args[0]);
+      },
+    },
+    {
+      pattern: /^When geocode coordinate parsing executes$/,
+      run: ({ world }) => {
+        world.output = geocodeHelpers.parseCoordinate(world.input.geocodeCoordinateRaw);
+      },
+    },
+    {
+      pattern: /^Then parsed geocode coordinate equals (-?\d+(?:\.\d+)?)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given geocode query text with (\d+) letters "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.rawGeocodeQuery = String(args[1]).repeat(Number(args[0]));
+      },
+    },
+    {
+      pattern: /^When geocode query normalization executes$/,
+      run: ({ world }) => {
+        world.output = geocodeHelpers.normalizeGeocodeQuery(world.input.rawGeocodeQuery);
+      },
+    },
+    {
+      pattern: /^Then normalized geocode query text length equals (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output.length, Number(args[0]));
       },
     },
     {
@@ -645,7 +1293,317 @@ defineFeature(test, geocodeAndClientErrorFeature, {
                 properties: { label: "Kamppi, Helsinki", confidence: 0.9 },
               },
             ],
+        });
+      },
+    },
+    {
+      pattern: /^Given scoring query text "([^"]*)" and candidate label "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.scoreQueryMatch = geocodeHelpers.normalizeForMatch(args[0], 140);
+        world.input.scoreCandidate = {
+          label: args[1],
+          confidence: 1,
+          variantIndex: 0,
+        };
+      },
+    },
+    {
+      pattern: /^When geocode candidate scoring executes$/,
+      run: ({ world }) => {
+        world.output = geocodeHelpers.scoreCandidate(world.input.scoreQueryMatch, world.input.scoreCandidate);
+      },
+    },
+    {
+      pattern: /^Then geocode candidate score is at least (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.ok(world.output >= Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Then geocode candidate score is greater than (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.ok(world.output > Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given tied ranking candidates with confidences ([\d.]+) and ([\d.]+)$/,
+      run: ({ args, world }) => {
+        world.input.rankingCandidates = [
+          {
+            label: "Kamppi",
+            confidence: Number(args[0]),
+            variantIndex: 0,
+          },
+          {
+            label: "Kamppi",
+            confidence: Number(args[1]),
+            variantIndex: 1,
+          },
+        ];
+      },
+    },
+    {
+      pattern: /^Given tied ranking candidates with equal confidence and variant indexes (\d+) and (\d+)$/,
+      run: ({ args, world }) => {
+        world.input.rankingCandidates = [
+          {
+            label: "Kamppi Center",
+            confidence: 1,
+            variantIndex: Number(args[0]),
+          },
+          {
+            label: "Kamppi",
+            confidence: 1,
+            variantIndex: Number(args[1]),
+          },
+        ];
+      },
+    },
+    {
+      pattern: /^Given fully identical tied ranking candidates$/,
+      run: ({ world }) => {
+        world.input.rankingCandidates = [
+          {
+            label: "Kamppi",
+            confidence: 1,
+            variantIndex: 0,
+          },
+          {
+            label: "Kamppi",
+            confidence: 1,
+            variantIndex: 0,
+          },
+        ];
+      },
+    },
+    {
+      pattern: /^When tied candidate ranking executes for query "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.output = geocodeHelpers.rankCandidatesForQuery(world.input.rankingCandidates, args[0]);
+      },
+    },
+    {
+      pattern: /^Then top ranked candidate confidence equals ([\d.]+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.[0]?.candidate?.confidence, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Then top ranked candidate variant index equals (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.[0]?.candidate?.variantIndex, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Then ranked candidate count equals (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output.length, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given token match query token "([^"]*)" and label token "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.queryToken = args[0];
+        world.input.labelToken = args[1];
+      },
+    },
+    {
+      pattern: /^When token matching executes$/,
+      run: ({ world }) => {
+        world.output = geocodeHelpers.tokenMatches(world.input.queryToken, world.input.labelToken);
+      },
+    },
+    {
+      pattern: /^Then token matching output equals (true|false)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output, args[0] === "true");
+      },
+    },
+    {
+      pattern: /^Given missing-token penalty query tokens "([^"]*)" and label tokens "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.queryTokens = args[0].split("|").filter(Boolean);
+        world.input.labelTokens = args[1].split("|").filter(Boolean);
+      },
+    },
+    {
+      pattern: /^When missing-token penalty is computed$/,
+      run: ({ world }) => {
+        const scoredCandidate = {
+          label: world.input.labelTokens.join(" "),
+          confidence: null,
+          variantIndex: 0,
+        };
+        const baselineQueryTokens = [world.input.queryTokens[0]].filter(Boolean);
+        const baseline = geocodeHelpers.scoreCandidate(
+          {
+            text: baselineQueryTokens.join(" "),
+            tokens: baselineQueryTokens,
+            compact: baselineQueryTokens.join(""),
+          },
+          scoredCandidate
+        );
+        const penalized = geocodeHelpers.scoreCandidate(
+          {
+            text: world.input.queryTokens.join(" "),
+            tokens: world.input.queryTokens,
+            compact: world.input.queryTokens.join(""),
+          },
+          scoredCandidate
+        );
+        world.output = baseline - penalized;
+      },
+    },
+    {
+      pattern: /^Then missing-token penalty is greater than (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.ok(Number.isFinite(world.output));
+        assert.ok(world.output > Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given strong-token counting query tokens "([^"]*)" and label tokens "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.queryTokens = args[0].split("|").filter(Boolean);
+        world.input.labelTokens = args[1].split("|").filter(Boolean);
+      },
+    },
+    {
+      pattern: /^When strong-token match count is computed$/,
+      run: ({ world }) => {
+        world.output = geocodeHelpers.countStrongTokenMatches(
+          world.input.queryTokens,
+          world.input.labelTokens
+        );
+      },
+    },
+    {
+      pattern: /^Then strong-token match count equals (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given ranked candidates with zero strong token matches at top$/,
+      run: ({ world }) => {
+        world.input.rankedCandidates = [
+          {
+            candidate: { lat: 60.17, lon: 24.93, label: "A", confidence: 0.8 },
+            strongTokenMatches: 0,
+            score: 100,
+          },
+          {
+            candidate: { lat: 60.18, lon: 24.94, label: "B", confidence: 0.7 },
+            strongTokenMatches: 0,
+            score: 99,
+          },
+        ];
+      },
+    },
+    {
+      pattern: /^When ambiguity choices are built$/,
+      run: ({ world }) => {
+        world.output = geocodeHelpers.buildAmbiguousChoices(world.input.rankedCandidates);
+      },
+    },
+    {
+      pattern: /^Then ambiguity choice count equals (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output.length, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given geocode feature with confidence ([\d.]+)$/,
+      run: ({ args, world }) => {
+        world.input.feature = {
+          geometry: { coordinates: [24.93, 60.17] },
+          properties: {
+            label: "Kamppi, Helsinki",
+            confidence: Number(args[0]),
+          },
+        };
+      },
+    },
+    {
+      pattern: /^When geocode feature parsing executes$/,
+      run: ({ world }) => {
+        world.output = geocodeHelpers.parseFeature(world.input.feature);
+      },
+    },
+    {
+      pattern: /^Then parsed geocode confidence equals (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output?.confidence, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given geocode candidate collection with variants "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.input.textVariants = args[0].split("|").filter(Boolean);
+        world.input.fetchCallIndex = 0;
+        world.input.fetchImpl = async () => {
+          const index = world.input.fetchCallIndex;
+          world.input.fetchCallIndex += 1;
+          return createJsonResponse({
+            features: [
+              {
+                geometry: { coordinates: [24.93 + index * 0.01, 60.17 + index * 0.01] },
+                properties: { label: `Variant ${index + 1}`, confidence: 0.9 },
+              },
+            ],
           });
+        };
+        world.input.getApiKey = () => "ok";
+      },
+    },
+    {
+      pattern: /^When geocode candidate collection executes$/,
+      run: async ({ world }) => {
+        world.output = await geocodeHelpers.collectGeocodeCandidates({
+          textVariants: world.input.textVariants,
+          biasLat: 60.17,
+          biasLon: 24.93,
+          lang: "fi",
+          fetchImpl: world.input.fetchImpl,
+          getApiKey: world.input.getApiKey,
+        });
+      },
+    },
+    {
+      pattern: /^Then collected geocode candidate count equals (\d+)$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.output.length, Number(args[0]));
+      },
+    },
+    {
+      pattern: /^Given geocode resolution input with no validated candidates$/,
+      run: ({ world }) => {
+        world.input.text = "kamppi";
+        world.input.textVariants = ["kamppi"];
+        world.input.fetchImpl = async () => createJsonResponse({ features: [] });
+        world.input.graphqlRequestImpl = async () => ({ stopsByRadius: { edges: [] } });
+        world.input.getApiKey = () => "ok";
+      },
+    },
+    {
+      pattern: /^When geocode match resolution executes$/,
+      run: async ({ world }) => {
+        world.output = await geocodeHelpers.resolveGeocodeMatch({
+          text: world.input.text,
+          textVariants: world.input.textVariants,
+          biasLat: 60.17,
+          biasLon: 24.93,
+          lang: "fi",
+          fetchImpl: world.input.fetchImpl,
+          graphqlRequestImpl: world.input.graphqlRequestImpl,
+          getApiKey: world.input.getApiKey,
+        });
+      },
+    },
+    {
+      pattern: /^Then geocode resolution has no location$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.output?.location, null);
       },
     },
     {

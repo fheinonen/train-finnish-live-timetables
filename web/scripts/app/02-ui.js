@@ -11,10 +11,11 @@
   let stopFilterAutoCloseTimeoutId = null;
 
   function isStopMode(mode = state.mode) {
-    return mode === MODE_BUS || mode === MODE_TRAM || mode === MODE_METRO;
+    return mode === MODE_BUS || mode === MODE_TRAM || mode === MODE_METRO || mode === MODE_RAIL;
   }
 
   function getStopModeLabel(mode = state.mode) {
+    if (mode === MODE_RAIL) return { singular: "train", plural: "trains", title: "Rail" };
     if (mode === MODE_TRAM) return { singular: "tram", plural: "trams", title: "Tram" };
     if (mode === MODE_METRO) return { singular: "metro", plural: "metros", title: "Metro" };
     return { singular: "bus", plural: "buses", title: "Bus" };
@@ -39,11 +40,6 @@
     return "departure-later";
   }
 
-  function isHelsinkiBound(departure) {
-    const destination = departure?.destination || "";
-    return /\bhelsinki\b/i.test(destination);
-  }
-
   function sanitizeStopSelections() {
     const allowedLines = new Set((state.busFilterOptions.lines || []).map((option) => option.value));
     const allowedDestinations = new Set(
@@ -58,11 +54,6 @@
 
   function getVisibleDepartures(departures) {
     if (!Array.isArray(departures)) return [];
-
-    if (state.mode === MODE_RAIL) {
-      if (!state.helsinkiOnly) return departures;
-      return departures.filter(isHelsinkiBound);
-    }
 
     if (!isStopMode()) {
       return departures;
@@ -182,23 +173,6 @@
     if (dom.resultsLimitSelectLabelEl) {
       dom.resultsLimitSelectLabelEl.textContent = String(activeValue);
     }
-  }
-
-  function updateHelsinkiFilterButton() {
-    if (!dom.helsinkiOnlyBtn) return;
-
-    if (state.mode !== MODE_RAIL) {
-      dom.helsinkiOnlyBtn.setAttribute("aria-pressed", "false");
-      dom.helsinkiOnlyBtn.classList.remove("is-active");
-      dom.helsinkiOnlyBtn.disabled = true;
-      dom.helsinkiOnlyBtn.textContent = "Helsinki Only (Rail)";
-      return;
-    }
-
-    dom.helsinkiOnlyBtn.disabled = false;
-    dom.helsinkiOnlyBtn.setAttribute("aria-pressed", String(state.helsinkiOnly));
-    dom.helsinkiOnlyBtn.classList.toggle("is-active", state.helsinkiOnly);
-    dom.helsinkiOnlyBtn.textContent = state.helsinkiOnly ? "Helsinki Only: On" : "Helsinki Only: Off";
   }
 
   function countActiveStopFilters() {
@@ -1044,12 +1018,10 @@
         return "No upcoming departures from this stop.";
       }
 
-      return state.helsinkiOnly
-        ? "No Helsinki-bound trains in upcoming departures."
-        : "No upcoming commuter trains right now.";
+      return "No upcoming commuter trains right now.";
     }
 
-    const serviceName = isStopMode() ? getStopModeLabel().singular : "train";
+    const serviceName = getStopModeLabel().singular;
     const serviceLabel = serviceName.charAt(0).toUpperCase() + serviceName.slice(1);
     return `${serviceLabel} in ${formatMinutes(next.departureIso)}`;
   }
@@ -1163,9 +1135,7 @@
             ? `No upcoming ${getStopModeLabel().plural} match selected filters.`
             : "No upcoming departures from this stop.";
       } else {
-        li.textContent = state.helsinkiOnly
-          ? "No Helsinki-bound trains in upcoming departures."
-          : "No upcoming commuter trains right now.";
+        li.textContent = "No upcoming commuter trains right now.";
       }
       dom.departuresEl.appendChild(li);
       return;
@@ -1178,9 +1148,7 @@
       const li = document.createElement("li");
       li.className = "empty-row";
       li.textContent =
-        isStopMode()
-          ? `No additional upcoming ${getStopModeLabel().plural} right now.`
-          : "No additional upcoming commuter trains right now.";
+        `No additional upcoming ${getStopModeLabel().plural} right now.`;
       dom.departuresEl.appendChild(li);
       return;
     }
@@ -1258,7 +1226,7 @@
     formatMinutes,
     minutesUntil,
     departureRowClass,
-    isHelsinkiBound,
+
     sanitizeStopSelections,
     getVisibleDepartures,
     updateModeButtons,
@@ -1266,7 +1234,7 @@
     toggleResultsLimitDropdown,
     selectResultsLimit,
     renderResultsLimitControl,
-    updateHelsinkiFilterButton,
+
     countActiveStopFilters,
     buildStopFilterSummary,
     syncStopFiltersPanelUi,

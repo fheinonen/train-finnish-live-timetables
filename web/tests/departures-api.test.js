@@ -67,6 +67,12 @@ Scenario: Reject invalid coordinates
   Then the departures response status is 400
   And the departures error message is "Invalid lat/lon"
 
+Scenario: Reject whitespace coordinates
+  Given a departures GET query with lat "   ", lon "24.9", and mode "RAIL"
+  When the departures API is called
+  Then the departures response status is 400
+  And the departures error message is "Invalid lat/lon"
+
 Scenario: Reject invalid mode
   Given a departures GET query with lat "60.17", lon "24.9", and mode "PLANE"
   When the departures API is called
@@ -116,16 +122,16 @@ Scenario: Resolve selected stop by member stop id
   Then the departures response status is 200
   And the departures payload selected stop id is "HSL:1234"
 
-Scenario: Return nearby rail station departures
-  Given nearest rail candidate is a station
+Scenario: Return nearby rail station departures via stop mode
+  Given a RAIL stop group with parent station "HSL:STN" named "Central Station"
   And a departures GET query with lat "60.17", lon "24.9", and mode "RAIL"
   When the departures API is called
   Then the departures response status is 200
-  And the departures payload station type is "station"
+  And the departures payload station type is "stop"
   And the departures payload contains 1 departure
 
 Scenario: Return nearby rail stop departures when no parent station exists
-  Given nearest rail candidate is a stop
+  Given a RAIL stop group without parent station named "Pasilan asema"
   And a departures GET query with lat "60.17", lon "24.9", and mode "RAIL"
   When the departures API is called
   Then the departures response status is 200
@@ -282,8 +288,8 @@ defineFeature(test, featureText, {
       },
     },
     {
-      pattern: /^Given nearest rail candidate is a station$/,
-      run: ({ world }) => {
+      pattern: /^Given a RAIL stop group with parent station "([^"]*)" named "([^"]*)"$/,
+      run: ({ args, world }) => {
         let callCount = 0;
         world.graphqlRequest = async () => {
           callCount += 1;
@@ -295,8 +301,8 @@ defineFeature(test, featureText, {
                     stop: {
                       gtfsId: "HSL:0100",
                       vehicleMode: "RAIL",
-                      name: "Central",
-                      parentStation: { gtfsId: "HSL:STN", name: "Central Station" },
+                      name: args[1],
+                      parentStation: { gtfsId: args[0], name: args[1] },
                     },
                   }),
                 ],
@@ -304,7 +310,7 @@ defineFeature(test, featureText, {
             };
           }
           return {
-            station: {
+            s0: {
               stoptimesWithoutPatterns: [createStopTime({ mode: "RAIL", line: "I", seconds: 60 })],
             },
           };
@@ -312,8 +318,8 @@ defineFeature(test, featureText, {
       },
     },
     {
-      pattern: /^Given nearest rail candidate is a stop$/,
-      run: ({ world }) => {
+      pattern: /^Given a RAIL stop group without parent station named "([^"]*)"$/,
+      run: ({ args, world }) => {
         let callCount = 0;
         world.graphqlRequest = async () => {
           callCount += 1;
@@ -325,7 +331,7 @@ defineFeature(test, featureText, {
                     stop: {
                       gtfsId: "HSL:0101",
                       vehicleMode: "RAIL",
-                      name: "Pasilan asema",
+                      name: args[0],
                       parentStation: null,
                     },
                   }),
@@ -334,7 +340,7 @@ defineFeature(test, featureText, {
             };
           }
           return {
-            stop: {
+            s0: {
               platformCode: "7",
               stoptimesWithoutPatterns: [createStopTime({ mode: "RAIL", line: "P", seconds: 60 })],
             },

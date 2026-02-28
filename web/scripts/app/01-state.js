@@ -13,7 +13,6 @@
     modeTramBtn: document.getElementById("modeTramBtn"),
     modeMetroBtn: document.getElementById("modeMetroBtn"),
     modeBusBtn: document.getElementById("modeBusBtn"),
-    helsinkiOnlyBtn: document.getElementById("helsinkiOnlyBtn"),
     busControlsEl: document.getElementById("busControls"),
     busStopSelectEl: document.getElementById("busStopSelect"),
     busStopSelectLabelEl: document.getElementById("busStopSelectLabel"),
@@ -61,7 +60,6 @@
     MODE_METRO: "metro",
     MODE_BUS: "bus",
     STORAGE_MODE_KEY: "prefs:mode",
-    STORAGE_HELSINKI_ONLY_KEY: "prefs:helsinkiOnly",
     STORAGE_BUS_STOP_KEY: "prefs:busStopId",
     STORAGE_BUS_LINES_KEY: "prefs:busLines",
     STORAGE_BUS_DESTINATIONS_KEY: "prefs:busDestinations",
@@ -92,7 +90,6 @@
     currentCoords: null,
     latestResponse: null,
     mode: MODE_RAIL,
-    helsinkiOnly: false,
     busStopId: null,
     busStopMemberFilterId: null,
     busLineFilters: [],
@@ -438,7 +435,6 @@
 
     return {
       mode: normalizeMode(params.get("mode")),
-      helsinkiOnly: parseBoolean(params.get("helsinkiOnly")),
       stopProvided: params.has("stop"),
       busStopId: params.get("stop") ? params.get("stop").trim() : null,
       linesProvided: params.has("line"),
@@ -457,13 +453,8 @@
     // 3) Persisted URL/localStorage state (deferred, never auto-applied on first load)
     const urlState = readStateFromUrl();
     const storedMode = normalizeMode(getStorageItem(constants.STORAGE_MODE_KEY));
-    const storedHelsinkiOnly = parseBoolean(getStorageItem(constants.STORAGE_HELSINKI_ONLY_KEY));
 
     state.mode = urlState.mode || storedMode || MODE_RAIL;
-    state.helsinkiOnly = urlState.helsinkiOnly ?? storedHelsinkiOnly ?? false;
-    if (state.mode !== MODE_RAIL) {
-      state.helsinkiOnly = false;
-    }
 
     const storedStopId = String(getStorageItem(constants.STORAGE_BUS_STOP_KEY) || "").trim() || null;
     const hydratedStopId = urlState.stopProvided ? urlState.busStopId : storedStopId;
@@ -524,7 +515,6 @@
 
   function syncStateToStorage() {
     setStorageItem(constants.STORAGE_MODE_KEY, state.mode);
-    setStorageItem(constants.STORAGE_HELSINKI_ONLY_KEY, state.helsinkiOnly ? "1" : "0");
     setStorageItem(constants.STORAGE_BUS_STOP_KEY, state.busStopId || "");
     setStorageItem(constants.STORAGE_BUS_LINES_KEY, JSON.stringify(state.busLineFilters));
     setStorageItem(
@@ -558,12 +548,6 @@
       params.set("mode", state.mode);
     }
 
-    if (state.mode === MODE_RAIL && state.helsinkiOnly) {
-      params.set("helsinkiOnly", "1");
-    } else {
-      params.delete("helsinkiOnly");
-    }
-
     const activeResultsLimit = getActiveResultsLimit();
     const defaultResultsLimit = getDefaultResultsLimit();
     if (activeResultsLimit === defaultResultsLimit) {
@@ -576,7 +560,7 @@
     params.delete("line");
     params.delete("dest");
 
-    if (state.mode === MODE_BUS || state.mode === MODE_TRAM || state.mode === MODE_METRO) {
+    if (state.mode === MODE_BUS || state.mode === MODE_TRAM || state.mode === MODE_METRO || state.mode === MODE_RAIL) {
       if (state.busStopId) {
         params.set("stop", state.busStopId);
       }

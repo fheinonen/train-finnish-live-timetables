@@ -66,7 +66,6 @@ function createModeInitHarness() {
       selectResultsLimit: () => {},
       selectStop: () => {},
       toggleStopFiltersPanel: () => {},
-      updateHelsinkiFilterButton: () => {},
       render: () => {},
       setStatus: () => {},
       buildStatusFromResponse: () => "",
@@ -90,7 +89,6 @@ function createModeInitHarness() {
       busStopSelectEl: createEventTarget(),
       busStopSelectWrapEl: { contains: () => false },
       stopFiltersToggleBtnEl: createEventTarget(),
-      helsinkiOnlyBtn: createEventTarget(),
       locationPromptAllowEl: createEventTarget(),
       permissionRetryBtnEl: createEventTarget(),
       busStopSelectListEl: {
@@ -111,7 +109,6 @@ function createModeInitHarness() {
       mode: "rail",
       currentCoords: { lat: 60.1, lon: 24.9 },
       latestResponse: null,
-      helsinkiOnly: false,
       isVoiceListening: false,
       isLoading: false,
       stopFiltersPanelOpen: false,

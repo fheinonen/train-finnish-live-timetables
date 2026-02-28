@@ -85,7 +85,6 @@ function bootUiApi() {
           busLineFilters: [],
           busDestinationFilters: [],
           busStops: [],
-          helsinkiOnly: false,
         },
         constants: {
           MODE_RAIL: "rail",
@@ -201,7 +200,6 @@ defineFeature(test, featureText, {
                 busLineFilters: [],
                 busDestinationFilters: [],
                 busStops: [],
-                helsinkiOnly: false,
               },
               constants: {
                 MODE_RAIL: "rail",

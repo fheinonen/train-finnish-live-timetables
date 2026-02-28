@@ -21,9 +21,16 @@ function safeString(value, maxLength) {
 }
 
 function parseCoordinate(raw) {
-  if (raw == null || raw === "") return null;
-  const value = Number(raw);
-  return Number.isFinite(value) ? value : null;
+  if (raw == null) return null;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    const value = Number(trimmed);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof raw !== "number") return null;
+  return Number.isFinite(raw) ? raw : null;
 }
 
 function isValidLatLon(lat, lon) {
@@ -86,9 +93,6 @@ function buildGeocodeTextVariants(text) {
       }
 
       addVariant(variants, `${hyphenAsSpace} ${municipality}`);
-      if (variants.length >= MAX_GEOCODE_TEXT_VARIANTS) {
-        return variants.slice(0, MAX_GEOCODE_TEXT_VARIANTS);
-      }
     }
   }
 
@@ -449,8 +453,8 @@ function parseGeocodeRequest(query) {
 
   const rawLat = parseCoordinate(query.lat);
   const rawLon = parseCoordinate(query.lon);
-  const hasBias = rawLat != null || rawLon != null;
-  if (hasBias && (rawLat == null || rawLon == null || !isValidLatLon(rawLat, rawLon))) {
+  const hasBiasInput = query.lat != null || query.lon != null;
+  if (hasBiasInput && (rawLat == null || rawLon == null || !isValidLatLon(rawLat, rawLon))) {
     return { error: "Invalid lat/lon", params: null };
   }
 
@@ -458,8 +462,8 @@ function parseGeocodeRequest(query) {
     error: null,
     params: {
       text,
-      biasLat: hasBias ? rawLat : DEFAULT_BIAS_LAT,
-      biasLon: hasBias ? rawLon : DEFAULT_BIAS_LON,
+      biasLat: hasBiasInput ? rawLat : DEFAULT_BIAS_LAT,
+      biasLon: hasBiasInput ? rawLon : DEFAULT_BIAS_LON,
       lang: normalizeLanguage(query.lang),
       textVariants: buildGeocodeTextVariants(text),
     },

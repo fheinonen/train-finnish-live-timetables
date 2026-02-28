@@ -27,9 +27,6 @@
 
     api.trackFirstManualInteraction("mode_change", { toMode: nextMode });
     state.mode = nextMode;
-    if (nextMode !== MODE_RAIL) {
-      state.helsinkiOnly = false;
-    }
 
     // Keep the mode switch visual response synchronous, and defer heavier
     // render/data work to the next frame so Firefox can paint immediately.
@@ -196,19 +193,6 @@
   dom.stopFiltersToggleBtnEl?.addEventListener("click", () => {
     api.trackFirstManualInteraction("stop_filters_panel_toggle", { currentMode: state.mode });
     api.toggleStopFiltersPanel();
-  });
-
-  dom.helsinkiOnlyBtn?.addEventListener("click", () => {
-    if (state.mode !== MODE_RAIL) return;
-    api.trackFirstManualInteraction("helsinki_only_toggle");
-    state.helsinkiOnly = !state.helsinkiOnly;
-    api.persistUiState();
-    api.updateHelsinkiFilterButton();
-
-    if (state.latestResponse) {
-      api.render(state.latestResponse);
-      api.setStatus(api.buildStatusFromResponse(state.latestResponse));
-    }
   });
 
   /* ─── Location Pre-Prompt ─── */

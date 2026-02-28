@@ -2,10 +2,10 @@
 (() => {
   const app = window.HMApp;
   const { api, dom, state, constants } = app;
-  const { MODE_TRAM, MODE_METRO, MODE_BUS } = constants;
+  const { MODE_RAIL, MODE_TRAM, MODE_METRO, MODE_BUS } = constants;
 
   function isStopMode(mode) {
-    return mode === MODE_BUS || mode === MODE_TRAM || mode === MODE_METRO;
+    return mode === MODE_BUS || mode === MODE_TRAM || mode === MODE_METRO || mode === MODE_RAIL;
   }
 
   function delay(ms) {
@@ -797,7 +797,6 @@
     api.updateModeLabels();
     if (modeOnly) return;
     api.renderResultsLimitControl();
-    api.updateHelsinkiFilterButton();
     api.renderStopControls();
     api.updateDataScope(state.latestResponse);
   }

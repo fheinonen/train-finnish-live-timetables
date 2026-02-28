@@ -4,8 +4,6 @@ const {
   MODE_TRAM,
   MODE_METRO,
   nearbyStopsQuery,
-  stopDeparturesQuery,
-  stationDeparturesQuery,
   buildMultiStopDeparturesQuery,
   graphqlRequest: defaultGraphqlRequest,
 } = require("../lib/digitransit");
@@ -115,41 +113,18 @@ function filterDeparturesBySelections(departures, requestedLines, requestedDesti
     });
 }
 
-function getNearestRailCandidate(modeStops) {
-  const candidateMap = new Map();
-
-  for (const node of modeStops) {
-    const parent = node.stop.parentStation;
-    const key = parent?.gtfsId || node.stop.gtfsId;
-    const name = parent?.name || node.stop.name;
-    const kind = parent?.gtfsId ? "station" : "stop";
-
-    const existing = candidateMap.get(key);
-    if (!existing || node.distance < existing.distance) {
-      candidateMap.set(key, {
-        key,
-        name,
-        distance: node.distance,
-        kind,
-        stopId: node.stop.gtfsId,
-      });
-    }
-  }
-
-  return [...candidateMap.values()].sort((a, b) => a.distance - b.distance)[0] || null;
-}
-
 function getDefaultResultLimit(mode) {
   return mode === MODE_BUS ? 24 : 8;
 }
 
 function getNoNearbyStopsMessage(mode) {
+  if (mode === MODE_RAIL) return "No nearby train stations";
   if (mode === MODE_METRO) return "No nearby metro stops";
   return mode === MODE_TRAM ? "No nearby tram stops" : "No nearby bus stops";
 }
 
 function isStopMode(mode) {
-  return mode === MODE_BUS || mode === MODE_TRAM || mode === MODE_METRO;
+  return mode === MODE_BUS || mode === MODE_TRAM || mode === MODE_METRO || mode === MODE_RAIL;
 }
 
 function getUpstreamMode(mode) {
@@ -168,13 +143,23 @@ function noNearbyStopModeResponse(mode) {
   };
 }
 
-function noNearbyRailModeResponse(mode) {
-  return { mode, station: null, message: "No nearby train stations" };
+function parseRequiredCoordinate(rawValue) {
+  if (rawValue == null) return null;
+
+  if (typeof rawValue === "string") {
+    const trimmed = rawValue.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  if (typeof rawValue !== "number") return null;
+  return Number.isFinite(rawValue) ? rawValue : null;
 }
 
 function parseDeparturesRequest(query) {
-  const lat = Number(query.lat);
-  const lon = Number(query.lon);
+  const lat = parseRequiredCoordinate(query.lat);
+  const lon = parseRequiredCoordinate(query.lon);
   const mode = parseRequestedMode(query.mode);
   const requestedLines = parseMultiQueryParam(query.line);
   const requestedDestinations = parseMultiQueryParam(query.dest);
@@ -288,51 +273,6 @@ async function buildStopModeResponse({
   };
 }
 
-async function buildRailModeResponse({
-  graphqlRequest,
-  mode,
-  upstreamMode,
-  modeStops,
-  requestedResultLimit,
-}) {
-  const nearest = getNearestRailCandidate(modeStops);
-  if (!nearest) {
-    return noNearbyRailModeResponse(mode);
-  }
-
-  let items = [];
-  let fallbackTrack = null;
-
-  if (nearest.kind === "station") {
-    const stationData = await graphqlRequest(stationDeparturesQuery, {
-      id: nearest.key,
-      departures: requestedResultLimit,
-    });
-    items = stationData?.station?.stoptimesWithoutPatterns || [];
-  } else {
-    const stopData = await graphqlRequest(stopDeparturesQuery, {
-      id: nearest.stopId,
-      departures: requestedResultLimit,
-    });
-    items = stopData?.stop?.stoptimesWithoutPatterns || [];
-    fallbackTrack = stopData?.stop?.platformCode || null;
-  }
-
-  const departures = filterUpcoming(
-    items.map((item) => parseDeparture(item, fallbackTrack, upstreamMode))
-  ).slice(0, requestedResultLimit);
-
-  return {
-    mode,
-    station: {
-      stopName: nearest.name,
-      type: nearest.kind,
-      distanceMeters: Math.round(nearest.distance),
-      departures,
-    },
-  };
-}
-
 function createDeparturesHandler({
   graphqlRequest = defaultGraphqlRequest,
   logError = console.error,
@@ -371,35 +311,19 @@ function createDeparturesHandler({
       const modeStops = getModeStops(nearbyData, upstreamMode);
 
       if (modeStops.length === 0) {
-        if (isStopMode(mode)) {
-          return res.status(200).json(noNearbyStopModeResponse(mode));
-        }
-
-        return res.status(200).json(noNearbyRailModeResponse(mode));
-      }
-
-      if (isStopMode(mode)) {
-        return res.status(200).json(
-          await buildStopModeResponse({
-            graphqlRequest,
-            mode,
-            upstreamMode,
-            modeStops,
-            requestedResultLimit,
-            requestedLines,
-            requestedDestinations,
-            requestedStopId,
-          })
-        );
+        return res.status(200).json(noNearbyStopModeResponse(mode));
       }
 
       return res.status(200).json(
-        await buildRailModeResponse({
+        await buildStopModeResponse({
           graphqlRequest,
           mode,
           upstreamMode,
           modeStops,
           requestedResultLimit,
+          requestedLines,
+          requestedDestinations,
+          requestedStopId,
         })
       );
     } catch (error) {
@@ -419,18 +343,16 @@ module.exports._private = {
   filterUpcoming,
   dedupeStopDepartures,
   filterDeparturesBySelections,
-  getNearestRailCandidate,
   getDefaultResultLimit,
   getNoNearbyStopsMessage,
   isStopMode,
   getUpstreamMode,
   noNearbyStopModeResponse,
-  noNearbyRailModeResponse,
+  parseRequiredCoordinate,
   parseDeparturesRequest,
   selectRequestedStop,
   buildStopModeStation,
   mapSelectableStops,
   buildStopModeResponse,
-  buildRailModeResponse,
   createDeparturesHandler,
 };

@@ -62,6 +62,12 @@ Scenario: Reject invalid bias coordinates
   Then the geocode response status is 400
   And the geocode error message is "Invalid lat/lon"
 
+Scenario: Reject whitespace bias coordinates
+  Given a geocode query text "kamppi" with lat " " and lon " "
+  When the geocode API is called
+  Then the geocode response status is 400
+  And the geocode error message is "Invalid lat/lon"
+
 Scenario: Return no matching HSL area location
   Given geocoding returns one candidate outside validated HSL stops
   And a geocode query text "kamppi"
