@@ -63,6 +63,12 @@ Scenario: Updated icons are applied to key controls
   When the user views top controls and filter affordances
   Then refresh, voice, and filter indicators use the new icon style set
 
+Scenario: Filter control uses mock icon and singular label
+  Given the app shell is rendered
+  When the filter control is inspected
+  Then the filter button text is "Filter"
+  And the filter icon uses slider knobs
+
 Scenario: Realtime badge is removed from result header
   Given departures are rendered
   When the result header is displayed
@@ -83,6 +89,7 @@ Scenario: Transit mode selector matches mockup segmented style
   And the segmented track uses the mockup slate tone
   And the active segment uses mockup border and shadow treatment
   And the selector uses mockup capsule height and spacing
+  And the selector corners match other control buttons
   And light theme segment colors stay within the light palette
 `;
 
@@ -426,6 +433,7 @@ defineFeature(test, featureText, {
     departureStyles: "",
     hasLivePillStyles: null,
     lightThemeCss: "",
+    filterControlChecks: null,
   }),
   stepDefinitions: [
     {
@@ -752,6 +760,33 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^When the filter control is inspected$/,
+      run: ({ world }) => {
+        const controlBlock =
+          world.html.match(/id="stopFiltersToggleBtn"[\s\S]*?<\/button>/)?.[0] || "";
+        const labelMatch = controlBlock.match(/<span>([^<]+)<\/span>/);
+        world.filterControlChecks = {
+          label: labelMatch?.[1]?.trim() || "",
+          hasSliderKnobs:
+            /class="control-icon icon-filter"/.test(controlBlock) &&
+            /<circle cx="8" cy="7" r="1\.8"><\/circle>/.test(controlBlock) &&
+            /<circle cx="16" cy="16" r="1\.8"><\/circle>/.test(controlBlock),
+        };
+      },
+    },
+    {
+      pattern: /^Then the filter button text is "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.filterControlChecks?.label, args[0]);
+      },
+    },
+    {
+      pattern: /^Then the filter icon uses slider knobs$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.filterControlChecks?.hasSliderKnobs, true);
+      },
+    },
+    {
       pattern: /^When the result header is displayed$/,
       run: ({ world }) => {
         world.resultHeaderHasRealtime = /class="live-pill"/.test(world.html) || />Realtime</.test(world.html);
@@ -817,7 +852,7 @@ defineFeature(test, featureText, {
       pattern: /^Then all transport modes are shown inside one rounded segmented control$/,
       run: ({ assert, world }) => {
         assert.equal(world.modeSelectorChecks.hasAllModesInOneControl, true);
-        assert.equal(world.modeSelectorChecks.controlRadius, "var(--radius-pill)");
+        assert.equal(world.modeSelectorChecks.controlRadius, "var(--radius-xs)");
       },
     },
     {
@@ -851,6 +886,12 @@ defineFeature(test, featureText, {
       run: ({ assert, world }) => {
         assert.equal(world.modeSelectorChecks.segmentMinHeight, "48px");
         assert.equal(world.modeSelectorChecks.controlPadding, "5px");
+      },
+    },
+    {
+      pattern: /^Then the selector corners match other control buttons$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.modeSelectorChecks.controlRadius, "var(--radius-xs)");
       },
     },
     {

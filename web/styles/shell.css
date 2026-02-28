@@ -127,7 +127,7 @@ h2 {
   grid-template-columns: repeat(4, 1fr);
   background: var(--segment-track-bg);
   border: 1px solid var(--interactive-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-xs);
   padding: 5px;
   overflow: hidden;
   --active-index: 0;
@@ -176,7 +176,7 @@ h2 {
   bottom: 5px;
   left: 5px;
   width: calc((100% - 10px) / 4);
-  border-radius: var(--radius-pill);
+  border-radius: calc(var(--radius-xs) - 1px);
   background: var(--segment-active-bg);
   border: 1px solid var(--segment-active-border);
   box-shadow: var(--segment-active-shadow);
