@@ -196,14 +196,34 @@
   }
 
   function countActiveStopFilters() {
-    return Math.max(0, state.busLineFilters.length) + Math.max(0, state.busDestinationFilters.length);
+    const stopCount = hasActiveStopFilter() ? 1 : 0;
+    return (
+      Math.max(0, state.busLineFilters.length) +
+      Math.max(0, state.busDestinationFilters.length) +
+      stopCount
+    );
   }
 
-  function buildStopFilterSummary(lineFilterCount = state.busLineFilters.length, destinationFilterCount = state.busDestinationFilters.length) {
-    const totalFilters = Math.max(0, Number(lineFilterCount) || 0) + Math.max(0, Number(destinationFilterCount) || 0);
+  function buildStopFilterSummary(
+    lineFilterCount = state.busLineFilters.length,
+    destinationFilterCount = state.busDestinationFilters.length,
+    stopFilterActive = hasActiveStopFilter()
+  ) {
+    const totalFilters =
+      Math.max(0, Number(lineFilterCount) || 0) +
+      Math.max(0, Number(destinationFilterCount) || 0) +
+      (stopFilterActive ? 1 : 0);
     if (totalFilters === 0) return "No filters";
     if (totalFilters === 1) return "1 filter";
     return `${totalFilters} filters`;
+  }
+
+  function hasActiveStopFilter() {
+    if (!isStopMode()) return false;
+    const nearestStopId = getNearestStopId();
+    const selectedStopId = String(state.busStopId || "").trim();
+    if (!selectedStopId || !nearestStopId) return false;
+    return selectedStopId !== nearestStopId;
   }
 
   function clearStopFilterAttention() {
@@ -287,6 +307,10 @@
       dom.stopFilterSummaryEl.textContent = buildStopFilterSummary();
     }
 
+    if (dom.busStopSelectEl) {
+      dom.busStopSelectEl.classList.toggle("is-active-filter", hasActiveStopFilter());
+    }
+
     if (!dom.stopFiltersToggleBtnEl || !dom.stopFiltersPanelEl) return;
 
     dom.stopFiltersToggleBtnEl.setAttribute("aria-expanded", String(Boolean(state.stopFiltersPanelOpen)));
@@ -315,6 +339,7 @@
       state.stopFiltersPanelOpen = false;
       state.stopFiltersPanelLockUntilMs = 0;
       clearStopFilterAttention();
+      dom.busStopSelectEl?.classList?.remove?.("is-active-filter");
     }
     syncStopFiltersPanelUi();
   }
@@ -465,6 +490,7 @@
       ...getStopCodes(getStopMeta(state.busStopId)),
     ]);
     const stopIdsScope = selectedStopCodes.join(", ");
+    const stopScope = hasActiveStopFilter() ? "custom stop selected" : "nearest stop";
     const lineScope =
       state.busLineFilters.length === 0
         ? "all lines"
@@ -476,9 +502,9 @@
     const resultScope = `${api.getActiveResultsLimit()} results`;
 
     if (!stopName) {
-      dom.dataScopeEl.textContent = `Selecting stop... (${lineScope}, ${destinationScope}, ${resultScope})`;
+      dom.dataScopeEl.textContent = `Selecting stop... (${stopScope}, ${lineScope}, ${destinationScope}, ${resultScope})`;
     } else {
-      dom.dataScopeEl.textContent = `Selected stop ${stopName} (${stopIdsScope || "—"}) - ${lineScope}, ${destinationScope}, ${resultScope}`;
+      dom.dataScopeEl.textContent = `Selected stop ${stopName} (${stopIdsScope || "—"}) - ${stopScope}, ${lineScope}, ${destinationScope}, ${resultScope}`;
     }
 
     dom.dataScopeEl.classList.remove("hidden");

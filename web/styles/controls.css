@@ -185,6 +185,12 @@
   border-color: rgba(241, 191, 111, 0.62);
 }
 
+.custom-select-trigger.is-active-filter {
+  border-color: var(--interactive-active-border);
+  background: var(--interactive-active-bg);
+  color: var(--interactive-active-text);
+}
+
 .custom-select-chevron {
   flex-shrink: 0;
   color: var(--text-muted);

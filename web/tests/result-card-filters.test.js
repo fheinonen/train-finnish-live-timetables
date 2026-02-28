@@ -29,6 +29,12 @@ Scenario: Tapping selected stop in a result card deselects to nearest stop
   When result card stop "custom-stop" is toggled
   Then selected stop equals "nearest-stop"
 
+Scenario: Tapping alternative stop applies stop filter state
+  Given stop mode with nearest stop "nearest-stop" and alternative stop "custom-stop"
+  When result card stop "custom-stop" is toggled
+  Then selected stop equals "custom-stop"
+  And stop filter summary text equals "1 filter"
+
 Scenario: Card tap feedback keeps panel open during lock window
   Given stop mode departures with lines "550" and "560"
   When result card line "550" is toggled
@@ -396,6 +402,19 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^Given stop mode with nearest stop "([^"]*)" and alternative stop "([^"]*)"$/,
+      run: ({ args, world }) => {
+        world.harness = createUiHarness({
+          departures: buildDepartures(["550", "560"], "line"),
+          busStops: [
+            { id: args[0], name: "Nearest", code: "1001", stopCodes: ["1001"], distanceMeters: 90 },
+            { id: args[1], name: "Custom", code: "2001", stopCodes: ["2001"], distanceMeters: 220 },
+          ],
+          busStopId: args[0],
+        });
+      },
+    },
+    {
       pattern: /^When result card stop "([^"]*)" is toggled$/,
       run: ({ args, world }) => {
         world.harness.app.api.toggleStopFromResultCard(args[0]);
@@ -405,6 +424,12 @@ defineFeature(test, featureText, {
       pattern: /^Then selected stop equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.harness.app.state.busStopId, args[0]);
+      },
+    },
+    {
+      pattern: /^Then stop filter summary text equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.harness.dom.stopFilterSummaryEl.textContent, args[0]);
       },
     },
     {
