@@ -79,6 +79,14 @@ Scenario: Legacy realtime badge styles are removed
   When legacy realtime badge styles are inspected
   Then no live-pill style rules are present
 
+Scenario: Result line number badge matches mockup block style
+  Given the departures stylesheet
+  When route badge styles are inspected
+  Then route badge background equals "var(--route-badge-bg)"
+  And route badge text color equals "var(--route-badge-text)"
+  And route badge shadow equals "var(--route-badge-shadow)"
+  And route badge numeral size equals "clamp(1.08rem, 4.4vw, 1.45rem)"
+
 Scenario: Transit mode selector matches mockup segmented style
   Given the app shell is rendered
   And the light theme stylesheet
@@ -434,6 +442,7 @@ defineFeature(test, featureText, {
     hasLivePillStyles: null,
     lightThemeCss: "",
     filterControlChecks: null,
+    routeBadgeStyleChecks: null,
   }),
   stepDefinitions: [
     {
@@ -820,6 +829,42 @@ defineFeature(test, featureText, {
       pattern: /^Then no live-pill style rules are present$/,
       run: ({ assert, world }) => {
         assert.equal(world.hasLivePillStyles, false);
+      },
+    },
+    {
+      pattern: /^When route badge styles are inspected$/,
+      run: ({ world }) => {
+        const routeBadgeRule = getRuleBody(world.departureStyles, ".route-badge");
+        world.routeBadgeStyleChecks = {
+          background: getDeclarationValue(routeBadgeRule, "background"),
+          textColor: getDeclarationValue(routeBadgeRule, "color"),
+          shadow: getDeclarationValue(routeBadgeRule, "box-shadow"),
+          fontSize: getDeclarationValue(routeBadgeRule, "font-size"),
+        };
+      },
+    },
+    {
+      pattern: /^Then route badge background equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.routeBadgeStyleChecks?.background, args[0]);
+      },
+    },
+    {
+      pattern: /^Then route badge text color equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.routeBadgeStyleChecks?.textColor, args[0]);
+      },
+    },
+    {
+      pattern: /^Then route badge shadow equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.routeBadgeStyleChecks?.shadow, args[0]);
+      },
+    },
+    {
+      pattern: /^Then route badge numeral size equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.routeBadgeStyleChecks?.fontSize, args[0]);
       },
     },
     {

@@ -53,6 +53,9 @@
 
   --departure-default-badge: linear-gradient(145deg, #4f8ba0, #3c6f80);
   --departure-default-badge-shadow: 0 8px 16px rgba(63, 127, 147, 0.24);
+  --route-badge-bg: linear-gradient(180deg, #bf8733, #aa7428);
+  --route-badge-text: #fff9ef;
+  --route-badge-shadow: 0 7px 14px rgba(156, 111, 45, 0.26);
 
   --shadow: 0 24px 44px rgba(38, 58, 72, 0.17);
   --shadow-sm: 0 10px 20px rgba(38, 58, 72, 0.13);

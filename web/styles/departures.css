@@ -317,8 +317,11 @@ li {
   min-width: clamp(54px, 13vw, 62px);
   height: clamp(54px, 13vw, 62px);
   border-radius: calc(var(--radius-badge) + 2px);
-  font-size: clamp(1.02rem, 4.2vw, 1.34rem);
+  font-size: clamp(1.08rem, 4.4vw, 1.45rem);
   letter-spacing: var(--tracking-normal);
+  color: var(--route-badge-text);
+  background: var(--route-badge-bg);
+  box-shadow: var(--route-badge-shadow);
 }
 
 .train {
