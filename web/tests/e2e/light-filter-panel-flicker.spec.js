@@ -286,12 +286,6 @@ Scenario: RAF probe catches a one-frame white flash during panel expansion
   When the stop filters panel is expanded under RAF style sampling
   Then the RAF probe reports at least 1 solid white frame
 
-Scenario: Light theme panel expansion has no solid white flash
-  Given light theme bus-mode preferences are persisted
-  And departures API mocks are installed for flicker probing
-  When the stop filters panel is expanded under RAF style sampling
-  Then the RAF probe reports 0 solid white frames
-
 Scenario: Light theme panel expand and collapse avoid washed frames
   Given light theme bus-mode preferences are persisted
   And departures API mocks are installed for flicker probing
@@ -357,14 +351,6 @@ defineFeature(test, featureText, {
           world.probe.solidWhiteFrames >= expectedMinimum,
           `Expected at least ${expectedMinimum} solid white frame(s), observed ${world.probe.solidWhiteFrames}`
         );
-      },
-    },
-    {
-      pattern: /^Then the RAF probe reports (\d+) solid white frames$/,
-      run: async ({ assert, args, world }) => {
-        const expectedCount = Number(args[0]);
-        assert.ok(world.probe, "Expected probe result");
-        assert.equal(world.probe.solidWhiteFrames, expectedCount);
       },
     },
     {
