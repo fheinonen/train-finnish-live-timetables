@@ -162,6 +162,26 @@
   box-sizing: border-box;
 }
 
+.next-filter-pill.result-filter-trigger {
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.next-filter-pill.result-filter-trigger.is-active::after {
+  content: "×";
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--interactive-active-border);
+  color: var(--interactive-active-text);
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+}
+
 .next-destination {
   display: inline-flex;
   align-items: center;

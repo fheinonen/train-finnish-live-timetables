@@ -538,10 +538,10 @@
     const chips = [];
     const stopLabel = getActiveStopScopeLabel(data);
     if (stopLabel) {
-      chips.push(createDataScopeChip(`Stop ${stopLabel}`, "stop"));
+      chips.push(createDataScopeChip(stopLabel, "stop"));
     }
     for (const line of state.busLineFilters) {
-      chips.push(createDataScopeChip(`Line ${line}`, "line"));
+      chips.push(createDataScopeChip(line, "line"));
     }
     for (const destination of state.busDestinationFilters) {
       chips.push(createDataScopeChip(destination, "destination"));
@@ -584,9 +584,7 @@
         button.setAttribute("aria-pressed", "false");
       }
 
-      button.textContent = active
-        ? `${option.value} (${option.count}) x`
-        : `${option.value} (${option.count})`;
+      button.textContent = `${option.value} (${option.count})`;
       button.addEventListener("click", () => onToggle(option.value));
       container.appendChild(button);
     }
@@ -666,7 +664,7 @@
       }
 
       const stopLabel = option.stopCode || option.id;
-      button.textContent = active ? `${stopLabel} x` : stopLabel;
+      button.textContent = stopLabel;
       button.addEventListener("click", () =>
         toggleStopFromResultCard(option.selectableStopId, option.id)
       );

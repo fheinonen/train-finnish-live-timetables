@@ -15,6 +15,8 @@ Scenario: Tapping hero line toggles line filter on and off
   And visible departures are filtered to line "550"
   And stop filters panel is open
   And filter pill feedback is visible
+  When data scope is refreshed from latest response
+  Then data scope chips equal "550"
   When result card line "550" is toggled again
   Then active line filters equal ""
 
@@ -49,10 +51,10 @@ Scenario: Filters dropdown lists real stop ids with card stop code labels
   And filters panel stop labels equal "H1001,H2002"
   When filters panel stop id "HSL:2002" is toggled
   Then active member stop filter id equals "HSL:2002"
-  And active stop filter pill labels equal "H2002 x"
+  And active stop filter pill labels equal "H2002"
   And visible departures are filtered to stop id "HSL:2002"
   When data scope is refreshed from latest response
-  Then data scope chips equal "Stop H2002"
+  Then data scope chips equal "H2002"
   When filters panel stop id "HSL:2002" is toggled again
   Then active member stop filter id equals ""
   When data scope is refreshed from latest response

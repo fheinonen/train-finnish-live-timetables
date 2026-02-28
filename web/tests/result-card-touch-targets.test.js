@@ -38,6 +38,12 @@ Scenario: Active stop filter uses cyan capsule styling
   And active stop filter border equals "1px solid var(--interactive-border-hover)"
   And active stop filter text color equals "var(--interactive-text)"
   And active stop filter text weight equals "var(--weight-semibold)"
+
+Scenario: Active hero filter pill exposes clear affordance
+  Given the departures stylesheet
+  When active hero filter pill styles are inspected
+  Then active hero clear affordance content equals "×"
+  And active hero clear affordance size equals "22px"
 `;
 
 function getRuleBody(css, selector) {
@@ -71,6 +77,8 @@ defineFeature(test, featureText, {
     activeStopBorder: null,
     activeStopColor: null,
     activeStopWeight: null,
+    activeHeroClearContent: null,
+    activeHeroClearSize: null,
   }),
   stepDefinitions: [
     {
@@ -114,6 +122,19 @@ defineFeature(test, featureText, {
         world.activeStopBorder = getDeclarationValue(activeStopRule, "border");
         world.activeStopColor = getDeclarationValue(activeStopRule, "color");
         world.activeStopWeight = getDeclarationValue(activeStopRule, "font-weight");
+      },
+    },
+    {
+      pattern: /^When active hero filter pill styles are inspected$/,
+      run: ({ world }) => {
+        const activeHeroClearRule = getRuleBody(
+          world.css,
+          ".next-filter-pill.result-filter-trigger.is-active::after"
+        );
+        world.activeHeroClearContent = String(
+          getDeclarationValue(activeHeroClearRule, "content") || ""
+        ).replaceAll("\"", "");
+        world.activeHeroClearSize = getDeclarationValue(activeHeroClearRule, "width");
       },
     },
     {
@@ -219,6 +240,18 @@ defineFeature(test, featureText, {
       pattern: /^Then active stop filter text weight equals "([^"]*)"$/,
       run: ({ assert, args, world }) => {
         assert.equal(world.activeStopWeight, args[0]);
+      },
+    },
+    {
+      pattern: /^Then active hero clear affordance content equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.activeHeroClearContent, args[0]);
+      },
+    },
+    {
+      pattern: /^Then active hero clear affordance size equals "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        assert.equal(world.activeHeroClearSize, args[0]);
       },
     },
   ],
