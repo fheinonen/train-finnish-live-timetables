@@ -18,6 +18,21 @@
 - For Node test runs, prefer failure-only output filtering, for example:
   `node --test ... 2>&1 | rg -v '^(✔|ℹ tests|ℹ suites|ℹ pass|ℹ fail 0|ℹ cancelled|ℹ skipped|ℹ todo|ℹ duration_ms)'`
 
+## UI Change Workflow
+- For every UI/styling change, run visual regression checks before sharing results.
+- Visual checks are snapshot-based and must cover both viewports:
+  - mobile
+  - desktop
+- From `web/`, run:
+  - `npm run ui:check`
+- If UI changes are intentional, update snapshots first:
+  - `npm run ui:baseline`
+  - then `npm run ui:check` again to confirm green.
+- Keep visual tests deterministic:
+  - mocked API responses
+  - fixed runtime time/source of randomness
+  - stable theme and viewport settings
+
 ## Git Discipline
 - Check test coverage before commit.
 - Never push to git without asking first.

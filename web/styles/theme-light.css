@@ -1,45 +1,45 @@
 [data-theme="light"] {
-  --bg: #f2f4f1;
-  --bg-card: rgba(255, 255, 255, 0.88);
-  --bg-card-solid: linear-gradient(155deg, rgba(255, 255, 255, 0.96), rgba(247, 248, 244, 0.98));
-  --bg-elevated: rgba(255, 255, 255, 0.76);
-  --border: rgba(47, 82, 98, 0.2);
+  --bg: #f5f2ea;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-solid: linear-gradient(180deg, #faf7f1, #f4f1ea);
+  --bg-elevated: rgba(255, 255, 255, 0.9);
+  --border: rgba(183, 154, 111, 0.3);
 
-  --text: #1c2530;
-  --text-secondary: #4f5e6a;
-  --text-muted: #7d8a94;
+  --text: #2d3338;
+  --text-secondary: #5d646b;
+  --text-muted: #8f969d;
 
-  --cyan: #3f7f93;
-  --cyan-soft: rgba(63, 127, 147, 0.1);
+  --cyan: #2f6872;
+  --cyan-soft: rgba(47, 104, 114, 0.1);
   --amber: #b57a2c;
   --amber-soft: rgba(181, 122, 44, 0.1);
-  --emerald: #3f9172;
-  --emerald-soft: rgba(63, 145, 114, 0.12);
-  --slate: #83959f;
+  --emerald: #537b6e;
+  --emerald-soft: rgba(83, 123, 110, 0.12);
+  --slate: #7e858c;
 
-  --interactive-bg: rgba(63, 127, 147, 0.08);
-  --interactive-bg-hover: rgba(63, 127, 147, 0.14);
-  --interactive-border: rgba(63, 127, 147, 0.24);
-  --interactive-border-hover: rgba(63, 127, 147, 0.38);
-  --interactive-text: #2f5a68;
+  --interactive-bg: rgba(255, 255, 255, 0.8);
+  --interactive-bg-hover: rgba(255, 255, 255, 0.96);
+  --interactive-border: rgba(181, 122, 44, 0.32);
+  --interactive-border-hover: rgba(181, 122, 44, 0.5);
+  --interactive-text: #2d3338;
 
-  --interactive-secondary-bg: rgba(63, 145, 114, 0.09);
-  --interactive-secondary-bg-hover: rgba(63, 145, 114, 0.14);
-  --interactive-secondary-border: rgba(63, 145, 114, 0.22);
-  --interactive-secondary-border-hover: rgba(63, 145, 114, 0.35);
-  --interactive-secondary-text: #2f6b54;
+  --interactive-secondary-bg: rgba(255, 255, 255, 0.8);
+  --interactive-secondary-bg-hover: rgba(255, 255, 255, 0.96);
+  --interactive-secondary-border: rgba(181, 122, 44, 0.26);
+  --interactive-secondary-border-hover: rgba(181, 122, 44, 0.44);
+  --interactive-secondary-text: #2d3338;
 
   --interactive-active-bg: rgba(181, 122, 44, 0.15);
   --interactive-active-border: rgba(181, 122, 44, 0.42);
   --interactive-active-text: #8a5a16;
 
-  --segment-track-bg: #cfd9e1;
-  --segment-divider: rgba(93, 111, 125, 0.2);
-  --segment-active-bg: linear-gradient(180deg, #b4bec9, #a9b5c1);
-  --segment-active-border: rgba(181, 122, 44, 0.56);
-  --segment-active-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42), 0 2px 6px rgba(98, 117, 133, 0.22);
-  --segment-inactive-text: #617180;
-  --segment-active-text: #263745;
+  --segment-track-bg: #f4efe4;
+  --segment-divider: rgba(181, 122, 44, 0.28);
+  --segment-active-bg: linear-gradient(180deg, #c99644, #b57a2c);
+  --segment-active-border: rgba(143, 95, 28, 0.62);
+  --segment-active-shadow: inset 0 1px 0 rgba(255, 245, 227, 0.6), 0 2px 6px rgba(143, 95, 28, 0.18);
+  --segment-inactive-text: #2d3338;
+  --segment-active-text: #fff8eb;
 
   --departure-now-bg: linear-gradient(140deg, rgba(181, 122, 44, 0.2), rgba(181, 122, 44, 0.08));
   --departure-now-border: rgba(181, 122, 44, 0.33);
@@ -47,28 +47,29 @@
   --departure-now-badge: linear-gradient(150deg, #ca9151, #9d6725);
   --departure-now-badge-shadow: 0 8px 16px rgba(181, 122, 44, 0.25);
 
-  --departure-soon-bg: linear-gradient(140deg, rgba(63, 127, 147, 0.16), rgba(63, 127, 147, 0.06));
-  --departure-soon-border: rgba(63, 127, 147, 0.28);
-  --departure-soon-accent: #3f7f93;
+  --departure-soon-bg: linear-gradient(140deg, rgba(47, 104, 114, 0.14), rgba(47, 104, 114, 0.05));
+  --departure-soon-border: rgba(47, 104, 114, 0.28);
+  --departure-soon-accent: #2f6872;
 
-  --departure-default-badge: linear-gradient(145deg, #4f8ba0, #3c6f80);
-  --departure-default-badge-shadow: 0 8px 16px rgba(63, 127, 147, 0.24);
+  --departure-default-badge: linear-gradient(145deg, #b88840, #9f702e);
+  --departure-default-badge-shadow: 0 8px 16px rgba(168, 118, 45, 0.2);
   --route-badge-bg: linear-gradient(180deg, #bf8733, #aa7428);
+  --route-badge-bg-cool: linear-gradient(180deg, #2d6b78, #245761);
   --route-badge-text: #fff9ef;
   --route-badge-shadow: 0 7px 14px rgba(156, 111, 45, 0.26);
 
-  --shadow: 0 24px 44px rgba(38, 58, 72, 0.17);
-  --shadow-sm: 0 10px 20px rgba(38, 58, 72, 0.13);
+  --shadow: 0 16px 28px rgba(78, 65, 44, 0.12);
+  --shadow-sm: 0 8px 18px rgba(78, 65, 44, 0.1);
 
-  --scrollbar-thumb: rgba(79, 94, 106, 0.32);
-  --scrollbar-thumb-hover: rgba(79, 94, 106, 0.48);
+  --scrollbar-thumb: rgba(103, 108, 112, 0.32);
+  --scrollbar-thumb-hover: rgba(103, 108, 112, 0.48);
 
-  --selection-bg: rgba(63, 127, 147, 0.25);
+  --selection-bg: rgba(47, 104, 114, 0.22);
   --selection-text: #111;
 
-  --atmosphere-1: rgba(63, 127, 147, 0.12);
-  --atmosphere-2: rgba(181, 122, 44, 0.11);
-  --atmosphere-3: rgba(63, 145, 114, 0.09);
+  --atmosphere-1: rgba(183, 154, 111, 0.1);
+  --atmosphere-2: rgba(181, 122, 44, 0.08);
+  --atmosphere-3: rgba(47, 104, 114, 0.05);
 
   --board-accent: rgba(181, 122, 44, 0.46);
 
@@ -77,12 +78,11 @@
 }
 
 [data-theme="light"] body::before {
-  background-image: linear-gradient(to right, rgba(28, 37, 48, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(28, 37, 48, 0.03) 1px, transparent 1px);
+  background-image: none;
 }
 
 [data-theme="light"] body::after {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(221, 227, 229, 0.35));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(226, 218, 204, 0.18));
 }
 
 [data-theme="light"] .theme-icon.moon {
@@ -108,8 +108,33 @@
   background: rgba(255, 255, 255, 0.72);
 }
 
+[data-theme="light"] .board::before {
+  background: none;
+}
+
+[data-theme="light"] .theme-toggle {
+  border: none;
+  background: transparent;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .theme-toggle:hover {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  transform: none;
+}
+
+[data-theme="light"] .card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 [data-theme="light"] #departures > li {
-  background: rgba(255, 255, 255, 0.78);
+  background: #fffcf7;
 }
 
 [data-theme="light"] .departure-later {

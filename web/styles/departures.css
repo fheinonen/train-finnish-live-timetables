@@ -19,6 +19,12 @@
   min-width: 0;
 }
 
+.result-head-meta h2 {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
 .station-stop-select-wrap {
   width: fit-content;
   max-width: 100%;
@@ -254,7 +260,6 @@ ul {
 li {
   padding: 0;
   border: 1px solid var(--border);
-  border-left: 3px solid transparent;
   background: rgba(255, 255, 255, 0.02);
   border-radius: var(--radius-sm);
   display: grid;
@@ -270,19 +275,16 @@ li {
 .departure-now {
   background: var(--departure-now-bg);
   border-color: var(--departure-now-border);
-  border-left-color: var(--departure-now-accent);
 }
 
 .departure-soon {
   background: var(--departure-soon-bg);
   border-color: var(--departure-soon-border);
-  border-left-color: var(--departure-soon-accent);
 }
 
 .departure-later {
   background: rgba(255, 255, 255, 0.02);
   border-color: var(--border);
-  border-left-color: transparent;
   opacity: 0.74;
 }
 
@@ -317,13 +319,22 @@ li {
 .route-badge {
   width: 84px;
   min-width: 84px;
-  height: 100%;
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  font-size: clamp(1.18rem, 4.8vw, 1.62rem);
+  height: auto;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 0;
+  font-size: clamp(1.35rem, 5.4vw, 1.9rem);
   letter-spacing: var(--tracking-normal);
   color: var(--route-badge-text);
   background: var(--route-badge-bg);
   box-shadow: none;
+}
+
+.route-badge.route-badge-cool {
+  background: var(--route-badge-bg-cool);
 }
 
 .departure-row .route-badge {
@@ -341,7 +352,7 @@ li {
 
 .train {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -351,12 +362,17 @@ li {
 
 .destination {
   font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-normal);
   color: var(--text);
   min-width: 0;
-  white-space: nowrap;
+  line-height: 1.26;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .track {
@@ -373,12 +389,14 @@ li {
 }
 
 .destination.result-filter-trigger {
-  display: inline-flex;
-  align-items: center;
+  display: -webkit-box;
   min-height: var(--tap-target-min);
-  padding: 0 var(--space-3);
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-track);
   width: 100%;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .destination.result-filter-trigger.is-active {
@@ -465,7 +483,7 @@ li {
 .remaining {
   display: inline;
   font-family: var(--font-body);
-  font-size: 1.26rem;
+  font-size: 1.44rem;
   line-height: var(--leading-none);
 }
 
@@ -480,10 +498,44 @@ li {
 
 .clock-time {
   display: inline;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--text-muted);
   font-weight: var(--weight-normal);
   font-family: var(--font-mono);
+}
+
+@media (max-width: 679px) {
+  .result {
+    margin-top: var(--space-1);
+    padding-top: var(--space-2);
+  }
+
+  .result-head {
+    align-items: flex-start;
+    margin-bottom: var(--space-1);
+  }
+
+  .result-head-meta h2,
+  .station-stop-select {
+    font-size: clamp(2.1rem, 9.4vw, 2.85rem);
+    line-height: 1.02;
+  }
+
+  #departures {
+    gap: var(--space-3);
+  }
+
+  .departure-row .departure-main {
+    padding: var(--space-4) 0 var(--space-3) var(--space-3);
+  }
+
+  .departure-row .departure-timing {
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-2);
+  }
+
+  .destination {
+    font-size: clamp(1.08rem, 4.5vw, 1.3rem);
+  }
 }
 
 .skeleton-next,

@@ -60,15 +60,6 @@
 }
 
 @media (max-width: 760px) {
-  .page {
-    padding: var(--space-5) var(--space-4) var(--space-8);
-    gap: var(--space-4);
-  }
-
-  .board {
-    padding: var(--space-5);
-  }
-
   .board-top {
     align-items: center;
   }
@@ -90,23 +81,9 @@
   .next-summary {
     padding: var(--space-6);
   }
-
-  li {
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-4);
-  }
 }
 
 @media (max-width: 400px) {
-  .page {
-    padding: var(--space-3) var(--space-2) var(--space-6);
-  }
-
-  .board {
-    padding: var(--space-4) var(--space-3);
-    border-radius: var(--radius-sm);
-  }
-
   .board-subtitle {
     font-size: 0.92rem;
   }
@@ -128,24 +105,9 @@
     font-size: clamp(1.6rem, 5.5vw, 2.4rem);
   }
 
-  .letter-badge {
-    min-width: 44px;
-    height: 44px;
-    font-size: clamp(0.85rem, 3.4vw, 1.1rem);
-  }
-
   .next-letter {
     min-width: 44px;
     height: 44px;
-  }
-
-  li {
-    gap: var(--space-1);
-    padding: var(--space-2) var(--space-3);
-  }
-
-  .destination {
-    font-size: var(--text-sm);
   }
 
   .remaining {

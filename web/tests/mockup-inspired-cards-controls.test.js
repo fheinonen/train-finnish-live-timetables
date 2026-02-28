@@ -85,11 +85,30 @@ Scenario: Result line number badge matches mockup block style
   Then route badge background equals "var(--route-badge-bg)"
   And route badge text color equals "var(--route-badge-text)"
   And route badge shadow equals "none"
-  And route badge numeral size equals "clamp(1.18rem, 4.8vw, 1.62rem)"
+  And route badge numeral size equals "clamp(1.35rem, 5.4vw, 1.9rem)"
   And route badge width equals "84px"
-  And route badge height equals "100%"
-  And route badge shape equals "var(--radius-sm) 0 0 var(--radius-sm)"
+  And route badge height equals "auto"
+  And route badge shape equals "0"
+  And route badge stretches to card height
   And departure rows use edge-to-edge badge layout
+
+Scenario: Key trunk line badges can use cool accent treatment
+  Given departures are rendered with line "200"
+  When departure cards are rendered
+  Then line "200" route badge uses cool accent class
+
+Scenario: Long destinations stay readable in result cards
+  Given the departures stylesheet
+  When destination text styles are inspected
+  Then destination text allows two-line wrapping without hard clipping
+  And destination text uses regular emphasis weight
+  And destination and stop spacing is compact
+
+Scenario: Card timing typography matches mockup emphasis
+  Given the departures stylesheet
+  When timing text styles are inspected
+  Then relative departure time uses larger type scale
+  And absolute departure time uses larger supporting scale
 
 Scenario: Transit mode selector matches mockup segmented style
   Given the app shell is rendered
@@ -440,13 +459,15 @@ defineFeature(test, featureText, {
     firstCard: null,
     secondCard: null,
     iconChecks: null,
-    modeSelectorChecks: null,
-    accessibilityChecks: null,
-    departureStyles: "",
-    hasLivePillStyles: null,
-    lightThemeCss: "",
-    filterControlChecks: null,
+      modeSelectorChecks: null,
+      accessibilityChecks: null,
+      departureStyles: "",
+      hasLivePillStyles: null,
+      lightThemeCss: "",
+      filterControlChecks: null,
     routeBadgeStyleChecks: null,
+    destinationStyleChecks: null,
+    timingStyleChecks: null,
   }),
   stepDefinitions: [
     {
@@ -782,8 +803,12 @@ defineFeature(test, featureText, {
           label: labelMatch?.[1]?.trim() || "",
           hasSliderKnobs:
             /class="control-icon icon-filter"/.test(controlBlock) &&
-            /<circle cx="8" cy="7" r="1\.8"><\/circle>/.test(controlBlock) &&
-            /<circle cx="16" cy="16" r="1\.8"><\/circle>/.test(controlBlock),
+            /<line x1="4" y1="6" x2="20" y2="6"><\/line>/.test(controlBlock) &&
+            /<line x1="4" y1="12" x2="20" y2="12"><\/line>/.test(controlBlock) &&
+            /<line x1="4" y1="18" x2="20" y2="18"><\/line>/.test(controlBlock) &&
+            /<circle cx="9" cy="6" r="1\.5"><\/circle>/.test(controlBlock) &&
+            /<circle cx="15" cy="12" r="1\.5"><\/circle>/.test(controlBlock) &&
+            /<circle cx="11" cy="18" r="1\.5"><\/circle>/.test(controlBlock),
         };
       },
     },
@@ -847,6 +872,7 @@ defineFeature(test, featureText, {
           width: getDeclarationValue(routeBadgeRule, "width"),
           height: getDeclarationValue(routeBadgeRule, "height"),
           borderRadius: getDeclarationValue(routeBadgeRule, "border-radius"),
+          alignSelf: getDeclarationValue(routeBadgeRule, "align-self"),
           rowPadding: getDeclarationValue(getRuleBody(world.departureStyles, "li"), "padding"),
         };
       },
@@ -894,9 +920,85 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^Then route badge stretches to card height$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.routeBadgeStyleChecks?.alignSelf, "stretch");
+      },
+    },
+    {
       pattern: /^Then departure rows use edge-to-edge badge layout$/,
       run: ({ assert, world }) => {
         assert.equal(world.routeBadgeStyleChecks?.rowPadding, "0");
+      },
+    },
+    {
+      pattern: /^Then line "([^"]*)" route badge uses cool accent class$/,
+      run: ({ assert, args, world }) => {
+        const row = world.uiHarness.dom.departuresEl.children[0];
+        const badge = findDescendantByClass(row, "route-badge");
+        assert.ok(badge, "Expected route badge");
+        assert.equal(badge.textContent, args[0]);
+        assert.equal(badge.classList.contains("route-badge-cool"), true);
+      },
+    },
+    {
+      pattern: /^When destination text styles are inspected$/,
+      run: ({ world }) => {
+        const destinationRule = getRuleBody(world.departureStyles, ".destination");
+        world.destinationStyleChecks = {
+          whiteSpace: getDeclarationValue(destinationRule, "white-space"),
+          lineClamp: getDeclarationValue(destinationRule, "-webkit-line-clamp"),
+          textOverflow: getDeclarationValue(destinationRule, "text-overflow"),
+          display: getDeclarationValue(destinationRule, "display"),
+          overflow: getDeclarationValue(destinationRule, "overflow"),
+          fontWeight: getDeclarationValue(destinationRule, "font-weight"),
+          trainGap: getDeclarationValue(getRuleBody(world.departureStyles, ".train"), "gap"),
+        };
+      },
+    },
+    {
+      pattern: /^Then destination text allows two-line wrapping without hard clipping$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.destinationStyleChecks?.whiteSpace, "normal");
+        assert.equal(world.destinationStyleChecks?.lineClamp, "2");
+        assert.equal(world.destinationStyleChecks?.textOverflow, "clip");
+        assert.equal(world.destinationStyleChecks?.display, "-webkit-box");
+        assert.equal(world.destinationStyleChecks?.overflow, "hidden");
+      },
+    },
+    {
+      pattern: /^Then destination text uses regular emphasis weight$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.destinationStyleChecks?.fontWeight, "var(--weight-normal)");
+      },
+    },
+    {
+      pattern: /^Then destination and stop spacing is compact$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.destinationStyleChecks?.trainGap, "var(--space-1)");
+      },
+    },
+    {
+      pattern: /^When timing text styles are inspected$/,
+      run: ({ world }) => {
+        const remainingRule = getRuleBody(world.departureStyles, ".remaining");
+        const clockTimeRule = getRuleBody(world.departureStyles, ".clock-time");
+        world.timingStyleChecks = {
+          remainingSize: getDeclarationValue(remainingRule, "font-size"),
+          clockSize: getDeclarationValue(clockTimeRule, "font-size"),
+        };
+      },
+    },
+    {
+      pattern: /^Then relative departure time uses larger type scale$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.timingStyleChecks?.remainingSize, "1.44rem");
+      },
+    },
+    {
+      pattern: /^Then absolute departure time uses larger supporting scale$/,
+      run: ({ assert, world }) => {
+        assert.equal(world.timingStyleChecks?.clockSize, "var(--text-base)");
       },
     },
     {
@@ -974,10 +1076,10 @@ defineFeature(test, featureText, {
     {
       pattern: /^Then light theme segment colors stay within the light palette$/,
       run: ({ assert, world }) => {
-        assert.equal(world.modeSelectorChecks.lightTrackToken, "#cfd9e1");
+        assert.equal(world.modeSelectorChecks.lightTrackToken, "#f4efe4");
         assert.equal(
           world.modeSelectorChecks.lightActiveToken,
-          "linear-gradient(180deg, #b4bec9, #a9b5c1)"
+          "linear-gradient(180deg, #c99644, #b57a2c)"
         );
       },
     },

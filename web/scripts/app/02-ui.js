@@ -1103,6 +1103,10 @@
     if (dom.skeletonEl) dom.skeletonEl.classList.add("hidden");
   }
 
+  function usesCoolRouteBadge(line) {
+    return String(line || "").trim() === "200";
+  }
+
   function render(data) {
     hideSkeleton();
     renderStopControls();
@@ -1153,6 +1157,9 @@
       const letterBadge = document.createElement("div");
       letterBadge.className = "letter-badge route-badge";
       letterBadge.textContent = item.line || "?";
+      if (usesCoolRouteBadge(item.line)) {
+        letterBadge.classList.add("route-badge-cool");
+      }
       if (isStopMode()) {
         setLineResultFilterTrigger(letterBadge, item.line);
       }

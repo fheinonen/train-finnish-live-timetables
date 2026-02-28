@@ -176,7 +176,7 @@ h2 {
   bottom: 5px;
   left: 5px;
   width: calc((100% - 10px) / 4);
-  border-radius: calc(var(--radius-xs) - 1px);
+  border-radius: var(--radius-xs);
   background: var(--segment-active-bg);
   border: 1px solid var(--segment-active-border);
   box-shadow: var(--segment-active-shadow);
@@ -210,5 +210,24 @@ h2 {
   .card {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+}
+
+@media (max-width: 679px) {
+  .page {
+    padding: var(--space-5) var(--space-3) var(--space-8);
+    gap: var(--space-4);
+  }
+
+  .board {
+    padding: var(--space-5) var(--space-4) var(--space-4);
+  }
+
+  .clock {
+    font-size: clamp(1.18rem, 6vw, 1.45rem);
+  }
+
+  .segment {
+    min-height: 42px;
   }
 }

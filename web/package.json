@@ -18,7 +18,9 @@
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:webkit": "playwright test --project=webkit",
-    "test:e2e:install": "playwright install --with-deps chromium firefox webkit"
+    "test:e2e:install": "playwright install --with-deps chromium firefox webkit",
+    "ui:check": "playwright test tests/e2e/ui-visual-regression.spec.js --project=chromium --reporter=line",
+    "ui:baseline": "playwright test tests/e2e/ui-visual-regression.spec.js --project=chromium --update-snapshots --reporter=line"
   },
   "devDependencies": {
     "@playwright/test": "1.55.1",

@@ -36,9 +36,15 @@
 }
 
 .stop-toolbar {
-  display: grid;
+  display: flex;
+  align-items: center;
+}
+
+.stop-filter-inline {
+  display: inline-flex;
+  align-items: center;
   gap: var(--space-3);
-  align-items: end;
+  min-height: var(--tap-target-min);
 }
 
 .stop-filters-toggle {
@@ -46,7 +52,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  width: fit-content;
+  width: auto;
   min-height: var(--tap-target-min);
   padding-inline: var(--space-4);
 }
@@ -61,13 +67,14 @@
 }
 
 .filter-summary {
-  border-radius: var(--radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.07);
-  padding: 1px var(--space-3);
+  border: none;
+  background: transparent;
+  padding: 0;
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: var(--weight-semibold);
 }
 
 .filter-summary.is-attention {
@@ -76,30 +83,26 @@
 
 @keyframes filter-pill-flash {
   0% {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.16);
+    color: var(--text-muted);
   }
   100% {
-    background: rgba(241, 191, 111, 0.34);
-    border-color: rgba(241, 191, 111, 0.82);
-    color: var(--text);
+    color: var(--amber);
   }
 }
 
 @keyframes filter-pill-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(241, 191, 111, 0.62);
+    text-shadow: 0 0 0 rgba(181, 122, 44, 0);
     transform: scale(1);
   }
   60% {
-    box-shadow: 0 0 0 8px rgba(241, 191, 111, 0);
-    transform: scale(1.06);
+    text-shadow: 0 0 12px rgba(181, 122, 44, 0.28);
+    transform: scale(1.03);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(241, 191, 111, 0);
+    text-shadow: 0 0 0 rgba(181, 122, 44, 0);
     transform: scale(1);
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.16);
+    color: var(--text-muted);
   }
 }
 
@@ -368,6 +371,22 @@ button:disabled {
   }
 
   .stop-toolbar {
-    grid-template-columns: minmax(0, 1fr) auto;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 679px) {
+  .controls {
+    margin: var(--space-3) 0 var(--space-2);
+  }
+
+  #locateBtn,
+  .voice-locate-btn {
+    min-height: 44px;
+    font-size: var(--text-md);
+  }
+
+  .stop-filter-inline {
+    gap: var(--space-2);
   }
 }
