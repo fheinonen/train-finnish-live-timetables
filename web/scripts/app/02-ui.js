@@ -627,7 +627,7 @@
         button.setAttribute("aria-pressed", "false");
       }
 
-      button.textContent = `${option.id} (${option.count})`;
+      button.textContent = option.stopCode || option.id;
       button.addEventListener("click", () =>
         toggleStopFromResultCard(option.selectableStopId, option.id)
       );

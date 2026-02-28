@@ -42,10 +42,11 @@ Scenario: Tapping alternative stop applies stop filter state
   Then selected stop equals "custom-stop"
   And stop filter summary text equals "1 filter"
 
-Scenario: Filters dropdown lists available real stop ids
+Scenario: Filters dropdown lists real stop ids with card stop code labels
   Given stop mode departures with stop ids "HSL:1001" and "HSL:2002"
   When stop filters panel controls are rendered
   Then filters panel stop id options equal "HSL:1001,HSL:2002"
+  And filters panel stop labels equal "H1001,H2002"
   When filters panel stop id "HSL:2002" is toggled
   Then active member stop filter id equals "HSL:2002"
   And visible departures are filtered to stop id "HSL:2002"
@@ -410,10 +411,15 @@ defineFeature(test, featureText, {
     {
       pattern: /^Given stop mode departures with stop ids "([^"]*)" and "([^"]*)"$/,
       run: ({ args, world }) => {
+        const toStopCode = (stopId) => {
+          const normalized = String(stopId || "").trim();
+          const suffix = normalized.includes(":") ? normalized.split(":").pop() : normalized;
+          return suffix ? `H${suffix}` : "";
+        };
         const departures = buildDepartures(["550", "560"], "line").map((departure, index) => ({
           ...departure,
           stopId: args[index],
-          stopCode: index === 0 ? "1001" : "2001",
+          stopCode: toStopCode(args[index]),
           stopName: index === 0 ? "Nearest" : "Custom",
         }));
         world.harness = createUiHarness({
@@ -422,16 +428,16 @@ defineFeature(test, featureText, {
             {
               id: "nearest-stop",
               name: "Nearest",
-              code: "1001",
-              stopCodes: ["1001"],
+              code: toStopCode(args[0]),
+              stopCodes: [toStopCode(args[0])],
               memberStopIds: [args[0]],
               distanceMeters: 90,
             },
             {
               id: "custom-stop",
               name: "Custom",
-              code: "2001",
-              stopCodes: ["2001"],
+              code: toStopCode(args[1]),
+              stopCodes: [toStopCode(args[1])],
               memberStopIds: [args[1]],
               distanceMeters: 220,
             },
@@ -622,6 +628,16 @@ defineFeature(test, featureText, {
         const expected = args[0].split(",").map((value) => value.trim()).filter(Boolean);
         const actual = (world.harness.dom.busStopFiltersEl.children || [])
           .map((item) => String(item?.dataset?.value || "").trim())
+          .filter(Boolean);
+        assert.deepEqual(actual, expected);
+      },
+    },
+    {
+      pattern: /^Then filters panel stop labels equal "([^"]*)"$/,
+      run: ({ assert, args, world }) => {
+        const expected = args[0].split(",").map((value) => value.trim()).filter(Boolean);
+        const actual = (world.harness.dom.busStopFiltersEl.children || [])
+          .map((item) => String(item?.textContent || "").trim())
           .filter(Boolean);
         assert.deepEqual(actual, expected);
       },
