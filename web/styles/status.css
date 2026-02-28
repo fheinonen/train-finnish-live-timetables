@@ -37,11 +37,6 @@
   line-height: var(--leading-relaxed);
 }
 
-.voice-location-choices-options {
-  display: grid;
-  gap: var(--space-2);
-}
-
 .voice-location-choice-option {
   text-align: left;
   color: var(--text);

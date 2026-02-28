@@ -45,6 +45,8 @@
   --ease-default: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
+@import "./tailwind-theme.css";
+
 /* Existing component imports — order: tokens → base → layout/components → themes */
 @import "./tokens.css";
 @import "./base.css";

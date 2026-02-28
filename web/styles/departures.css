@@ -144,20 +144,10 @@
   line-height: var(--leading-normal);
 }
 
-.next-track-row {
-  margin: 8px 0 0;
-}
-
 ul {
   list-style: none;
   padding: 0;
   margin: 0;
-}
-
-.departures {
-  margin-top: var(--space-2);
-  display: grid;
-  gap: var(--space-2);
 }
 
 li {
@@ -277,12 +267,6 @@ li {
   color: var(--text-muted);
   font-weight: var(--weight-normal);
   font-family: var(--font-mono);
-}
-
-.skeleton {
-  display: grid;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
 }
 
 .skeleton-next,

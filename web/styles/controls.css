@@ -15,20 +15,10 @@
   transition: all var(--duration-normal) var(--ease-default);
 }
 
-.voice-icon {
-  flex-shrink: 0;
-}
-
 .voice-locate-btn.is-listening {
   color: var(--amber);
   border-color: rgba(241, 191, 111, 0.5);
   background: rgba(241, 191, 111, 0.16);
-}
-
-.bus-controls {
-  margin: 0 0 var(--space-4);
-  display: grid;
-  gap: var(--space-3);
 }
 
 .stop-toolbar {
@@ -80,20 +70,6 @@
   pointer-events: none;
 }
 
-.bus-control {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.results-control {
-  min-width: 96px;
-}
-
-.bus-filter-group {
-  display: grid;
-  gap: var(--space-2);
-}
-
 .bus-label {
   margin: 0;
   font-size: var(--text-xs);
@@ -121,10 +97,6 @@
 .bus-select option {
   background: var(--bg);
   color: var(--text);
-}
-
-.custom-select {
-  position: relative;
 }
 
 .custom-select-trigger {
@@ -206,12 +178,6 @@
 .custom-select-list li[aria-selected="true"] {
   color: var(--interactive-active-text);
   font-weight: var(--weight-semibold);
-}
-
-.chip-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
 }
 
 .chip-toggle {

@@ -1,0 +1,10 @@
+/* Bridge project design tokens into Tailwind's @theme so utilities
+   like bg-bg-elevated, border-border, font-body work.
+   Tokens already defined in main.css @theme (text, text-secondary,
+   text-muted, bg, cyan, amber, emerald, slate, mono) are omitted. */
+@theme {
+  --color-border: var(--border);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-card: var(--bg-card-solid);
+  --font-body: var(--font-body);
+}

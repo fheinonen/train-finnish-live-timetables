@@ -22,11 +22,11 @@
     <main class="page" aria-live="polite">
       <section class="board card">
         <header class="board-top">
-          <div class="board-brand">
+          <div class="grid gap-2">
             <p id="modeEyebrow" class="eyebrow">Helsinki Moves</p>
             <p class="board-subtitle">Live departures in one glance</p>
           </div>
-          <div class="board-top-right">
+          <div class="flex items-center gap-4">
             <p id="nowClock" class="clock">--:--</p>
             <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode" type="button">
               <svg class="theme-icon moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -52,7 +52,7 @@
             aria-pressed="false"
           >
             <svg
-              class="voice-icon"
+              class="shrink-0"
               width="14"
               height="14"
               viewBox="0 0 24 24"
@@ -78,15 +78,15 @@
         <p id="resolvedLocation" class="resolved-location hidden" aria-live="polite"></p>
         <section id="voiceLocationChoices" class="voice-location-choices hidden" aria-live="polite">
           <p id="voiceLocationChoicesTitle" class="voice-location-choices-title"></p>
-          <div id="voiceLocationChoicesOptions" class="voice-location-choices-options"></div>
+          <div id="voiceLocationChoicesOptions" class="grid gap-2"></div>
           <button id="voiceLocationChoicesCancel" class="secondary" type="button">Cancel</button>
         </section>
 
-        <section id="busControls" class="bus-controls hidden" aria-label="Stop controls">
+        <section id="busControls" class="mb-4 grid gap-3 hidden" aria-label="Stop controls">
           <div class="stop-toolbar">
-            <div class="bus-control">
+            <div class="grid gap-2">
               <span class="bus-label">Stop</span>
-              <div class="custom-select" id="busStopSelectWrap">
+              <div class="relative" id="busStopSelectWrap">
                 <button
                   type="button"
                   id="busStopSelect"
@@ -113,15 +113,15 @@
             </button>
           </div>
           <div id="stopFiltersPanel" class="stop-filters-panel hidden">
-            <div class="bus-filter-group">
+            <div class="grid gap-2">
               <p class="bus-label">Lines</p>
-              <div id="busLineFilters" class="chip-group" role="group" aria-label="Line filters"></div>
+              <div id="busLineFilters" class="flex flex-wrap gap-2" role="group" aria-label="Line filters"></div>
             </div>
-            <div class="bus-filter-group">
+            <div class="grid gap-2">
               <p class="bus-label">Destinations</p>
               <div
                 id="busDestinationFilters"
-                class="chip-group"
+                class="flex flex-wrap gap-2"
                 role="group"
                 aria-label="Destination filters"
               ></div>
@@ -133,7 +133,7 @@
         <p id="dataScope" class="data-scope hidden">Selected stop: -</p>
         <p id="lastUpdated" class="last-updated">Last updated: -</p>
 
-        <div id="skeleton" class="skeleton hidden" role="progressbar" aria-label="Loading departures">
+        <div id="skeleton" class="grid gap-2 mt-4 hidden" role="progressbar" aria-label="Loading departures">
           <div class="skeleton-next"></div>
           <div class="skeleton-row"></div>
           <div class="skeleton-row"></div>
@@ -148,7 +148,7 @@
               <p id="stationMeta" class="muted"></p>
             </div>
             <div class="result-head-right">
-              <div class="custom-select results-control" id="resultsLimitSelectWrap">
+              <div class="relative min-w-[96px]" id="resultsLimitSelectWrap">
                 <button type="button" id="resultsLimitSelect" class="custom-select-trigger"
                   role="combobox" aria-expanded="false" aria-haspopup="listbox"
                   aria-label="Number of departures">
@@ -167,11 +167,11 @@
               <p class="next-mins"><span id="nextMins">-</span></p>
             </div>
             <p id="nextDestination" class="next-destination">-</p>
-            <p class="next-track-row">
+            <p class="mt-2">
               <span id="nextTrack" class="next-chip">Track -</span>
             </p>
           </div>
-          <ul id="departures" class="departures"></ul>
+          <ul id="departures" class="mt-2 grid gap-2"></ul>
         </section>
       </section>
 
