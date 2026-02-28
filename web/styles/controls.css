@@ -53,17 +53,15 @@
   background: rgba(255, 255, 255, 0.02);
   padding: var(--space-4);
   max-height: 500px;
-  opacity: 1;
   overflow: hidden;
+  will-change: max-height, padding;
   transition: max-height var(--duration-medium) var(--ease-default),
-    opacity var(--duration-fast) var(--ease-default),
     padding var(--duration-medium) var(--ease-default);
 }
 
 .stop-filters-panel.hidden {
   display: grid !important;
   max-height: 0;
-  opacity: 0;
   padding-top: 0;
   padding-bottom: 0;
   border-color: transparent;

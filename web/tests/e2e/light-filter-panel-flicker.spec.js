@@ -205,6 +205,72 @@ async function runPanelRafProbe(page) {
   });
 }
 
+async function runPanelExpandCollapseOpacityProbe(page) {
+  return page.evaluate(async () => {
+    const panel = document.querySelector("#stopFiltersPanel");
+    const toggle = document.querySelector("#stopFiltersToggleBtn");
+    if (!panel || !toggle) {
+      return {
+        expandVisibleSamples: 0,
+        expandLowOpacityVisibleFrames: 0,
+        collapseVisibleSamples: 0,
+        collapseLowOpacityVisibleFrames: 0,
+      };
+    }
+
+    const sampleWindow = async (durationMs) => {
+      const samples = [];
+      const start = performance.now();
+      await new Promise((resolve) => {
+        const sample = (now) => {
+          const elapsedMs = now - start;
+          const computed = getComputedStyle(panel);
+          const panelRect = panel.getBoundingClientRect();
+          const opacity = Number.parseFloat(computed.opacity) || 0;
+          const isVisible = opacity > 0.08 && panelRect.height > 8;
+          const isLowOpacityWhileVisible = isVisible && opacity < 0.95;
+
+          samples.push({
+            opacity,
+            height: panelRect.height,
+            isVisible,
+            isLowOpacityWhileVisible,
+          });
+
+          if (elapsedMs >= durationMs) {
+            resolve();
+            return;
+          }
+          requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      });
+      return samples;
+    };
+
+    toggle.click();
+    const expandSamples = await sampleWindow(520);
+    toggle.click();
+    const collapseSamples = await sampleWindow(520);
+
+    const expandVisibleSamples = expandSamples.filter((sample) => sample.isVisible).length;
+    const expandLowOpacityVisibleFrames = expandSamples.filter(
+      (sample) => sample.isLowOpacityWhileVisible
+    ).length;
+    const collapseVisibleSamples = collapseSamples.filter((sample) => sample.isVisible).length;
+    const collapseLowOpacityVisibleFrames = collapseSamples.filter(
+      (sample) => sample.isLowOpacityWhileVisible
+    ).length;
+
+    return {
+      expandVisibleSamples,
+      expandLowOpacityVisibleFrames,
+      collapseVisibleSamples,
+      collapseLowOpacityVisibleFrames,
+    };
+  });
+}
+
 test.skip(
   ({ browserName }) => browserName !== "chromium",
   "RAF flicker probe is maintained in Chromium only."
@@ -225,6 +291,13 @@ Scenario: Light theme panel expansion has no solid white flash
   And departures API mocks are installed for flicker probing
   When the stop filters panel is expanded under RAF style sampling
   Then the RAF probe reports 0 solid white frames
+
+Scenario: Light theme panel expand and collapse avoid washed frames
+  Given light theme bus-mode preferences are persisted
+  And departures API mocks are installed for flicker probing
+  When the stop filters panel is expanded and collapsed under RAF opacity sampling
+  Then the expand probe reports 0 low-opacity visible frames
+  And the collapse probe reports 0 low-opacity visible frames
 `;
 
 defineFeature(test, featureText, {
@@ -232,6 +305,7 @@ defineFeature(test, featureText, {
   createWorld: ({ fixtures }) => ({
     page: fixtures.page,
     probe: null,
+    opacityProbe: null,
   }),
   stepDefinitions: [
     {
@@ -266,6 +340,15 @@ defineFeature(test, featureText, {
       },
     },
     {
+      pattern: /^When the stop filters panel is expanded and collapsed under RAF opacity sampling$/,
+      run: async ({ world }) => {
+        await world.page.goto("/");
+        await expect(world.page.locator("#busControls")).toBeVisible();
+        await expect(world.page.locator("#stopFiltersPanel")).toHaveClass(/hidden/);
+        world.opacityProbe = await runPanelExpandCollapseOpacityProbe(world.page);
+      },
+    },
+    {
       pattern: /^Then the RAF probe reports at least (\d+) solid white frame$/,
       run: async ({ assert, args, world }) => {
         const expectedMinimum = Number(args[0]);
@@ -282,6 +365,22 @@ defineFeature(test, featureText, {
         const expectedCount = Number(args[0]);
         assert.ok(world.probe, "Expected probe result");
         assert.equal(world.probe.solidWhiteFrames, expectedCount);
+      },
+    },
+    {
+      pattern: /^Then the expand probe reports (\d+) low-opacity visible frames$/,
+      run: async ({ assert, args, world }) => {
+        const expectedCount = Number(args[0]);
+        assert.ok(world.opacityProbe, "Expected opacity probe result");
+        assert.equal(world.opacityProbe.expandLowOpacityVisibleFrames, expectedCount);
+      },
+    },
+    {
+      pattern: /^Then the collapse probe reports (\d+) low-opacity visible frames$/,
+      run: async ({ assert, args, world }) => {
+        const expectedCount = Number(args[0]);
+        assert.ok(world.opacityProbe, "Expected opacity probe result");
+        assert.equal(world.opacityProbe.collapseLowOpacityVisibleFrames, expectedCount);
       },
     },
   ],
