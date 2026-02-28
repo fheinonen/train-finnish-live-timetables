@@ -10,7 +10,7 @@ Feature: Result card touch target ergonomics
 Scenario: Destination and stop taps have separated hit targets
   Given the departures stylesheet
   When result card touch target styles are inspected
-  Then train rows use "var(--space-2)" vertical spacing between destination and stop
+  Then train rows use "var(--space-1)" vertical spacing between destination and stop
   And destination filter trigger has minimum hit height "var(--tap-target-min)"
   And stop filter trigger has minimum hit height "var(--tap-target-min)"
 

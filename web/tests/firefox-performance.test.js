@@ -124,6 +124,7 @@ function createModeInitHarness() {
     window: {
       HMApp: app,
       addEventListener: () => {},
+      location: { search: "", pathname: "/" },
       matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
       requestAnimationFrame: (callback) => {
         rafQueue.push(callback);
